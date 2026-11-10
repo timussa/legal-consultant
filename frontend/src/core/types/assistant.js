@@ -46,6 +46,7 @@
  * @property {string[]} [nextSteps]
  * @property {string[]} [followUps]
  * @property {string[]} [checkedDocuments]
+ * @property {string[]} [missingInfo] Чего не хватает в базе для ответа
  * @property {string[]} [options]
  * @property {Turn[]} [turns]
  */
@@ -54,6 +55,7 @@
  * @typedef {Object} EventDate
  * @property {string} value Дата в формате ISO
  * @property {string} label
+ * @property {string} [hint] Пояснение: «сегодня», «дата подписания»
  */
 
 /**

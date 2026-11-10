@@ -4,7 +4,7 @@ import {LoaderCircle, WifiOff} from 'lucide-vue-next';
 defineProps({
     isLoading: {type: Boolean, default: false},
     error: {type: String, default: null},
-    loadingText: {type: String, default: 'Загружаем…'},
+    loadingText: {type: String, default: 'Открываю…'},
 });
 
 const emit = defineEmits(['retry']);

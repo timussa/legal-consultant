@@ -92,6 +92,7 @@ function isActive(item) {
         flex-direction: column;
         align-items: center;
         width: 68px;
+        transition: color $duration ease;
         color: $color-ink-muted;
         border-radius: $radius-lg;
         text-decoration: none;
@@ -103,7 +104,7 @@ function isActive(item) {
             color: $color-navy;
 
             #{$block}__icon {
-                background: $color-surface-muted;
+                background-color: $color-surface-muted;
             }
         }
 
@@ -112,8 +113,11 @@ function isActive(item) {
 
             #{$block}__icon {
                 color: $color-white;
-                background: $gradient-user;
                 box-shadow: $shadow-bubble;
+
+                &::before {
+                    opacity: 1;
+                }
             }
         }
 
@@ -125,12 +129,26 @@ function isActive(item) {
     &__icon {
         @include flex-center;
 
+        position: relative;
         width: 44px;
         height: 40px;
         transition:
-            background $duration ease,
+            color $duration ease,
+            background-color $duration ease,
             box-shadow $duration ease;
         border-radius: $radius-lg;
+        isolation: isolate;
+
+        &::before {
+            position: absolute;
+            z-index: -1;
+            transition: opacity $duration ease;
+            opacity: 0;
+            border-radius: inherit;
+            background: $color-action;
+            content: '';
+            inset: 0;
+        }
     }
 
     &__label {

@@ -61,7 +61,8 @@
     overflow: hidden;
     color: $color-white;
     border-radius: $radius-2xl;
-    background: $gradient-brand;
+    background-color: $color-navy;
+    box-shadow: $shadow-raised;
 }
 
 @mixin glass {
@@ -69,17 +70,9 @@
     background: rgba($color-white, 14%);
 }
 
-@mixin gradient-border($width: 1.5px) {
-    border: $width solid transparent;
-    background:
-        linear-gradient($color-surface, $color-surface) padding-box,
-        $gradient-thread border-box;
-}
-
-@mixin soft-glows {
-    background:
-        radial-gradient(760px 420px at 100% 0%, rgba($color-violet-bright, 10%), transparent 62%),
-        radial-gradient(620px 360px at 0% 100%, rgba($color-orange-soft, 10%), transparent 62%), $color-page;
+@mixin accent-border($width: 1px) {
+    border: $width solid $color-lavender-line;
+    background-color: $color-surface;
 }
 
 @mixin focus-ring {
@@ -87,4 +80,61 @@
         outline: 2px solid $color-violet;
         outline-offset: 2px;
     }
+}
+
+@mixin press {
+    &:not(:disabled):active {
+        transform: scale(0.97);
+        transition-duration: $duration-press;
+    }
+}
+
+@mixin sheen {
+    position: relative;
+    overflow: hidden;
+    isolation: isolate;
+
+    &::after {
+        position: absolute;
+        z-index: -1;
+        transform: translateX(-110%);
+        background: linear-gradient(105deg, transparent 30%, rgba($color-white, 22%) 50%, transparent 70%);
+        content: '';
+        inset: 0;
+        pointer-events: none;
+    }
+
+    &:not(:disabled) {
+        @include hover {
+            &::after {
+                transform: translateX(110%);
+                transition: transform 1.1s $ease-in-out;
+            }
+        }
+    }
+}
+
+@mixin highlighter($color: $color-highlighter) {
+    border-radius: 0.6em 0.25em 0.5em 0.3em;
+    background-color: transparent;
+    background-image: linear-gradient(
+        100deg,
+        rgba($color, 0%) 0.5%,
+        rgba($color, 90%) 2.5%,
+        $color 6%,
+        rgba($color, 85%) 93%,
+        rgba($color, 0%) 99%
+    );
+    background-repeat: no-repeat;
+    background-size: 100% 78%;
+    background-position: 0 70%;
+    box-decoration-break: clone;
+    -webkit-box-decoration-break: clone;
+
+    @include margin('x', -0.5);
+    @include padding('x', 0.5);
+}
+
+@mixin highlighter-draw($delay: 0s) {
+    animation: highlighter-draw 0.7s $ease-out $delay both;
 }

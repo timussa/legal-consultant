@@ -33,7 +33,7 @@ defineProps({
                 >
                     <span class="home-affected__item-title">{{ answer.number }} · {{ answer.title }}</span>
                     <span class="home-affected__reason">{{ answer.reason }}</span>
-                    <span class="home-affected__action">Переспросить по новой редакции →</span>
+                    <span class="home-affected__action">Переспросить по новой редакции</span>
                 </RouterLink>
             </li>
         </ul>

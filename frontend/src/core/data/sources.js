@@ -1,5 +1,6 @@
 const CONTRACT_META = 'договор от 12.02.2024';
 const REGULATION_2025_META = 'ред. от 01.03.2025 · действует';
+const LAW_CURRENT_META = 'действующая редакция · изменён с 01.01.2026';
 const REGULATION_2023_META = 'ред. от 10.01.2023 · утратила силу 01.03.2025';
 
 export const SOURCES = Object.freeze({
@@ -90,6 +91,15 @@ export const SOURCES = Object.freeze({
         before: 'Договоры на сумму',
         quote: 'свыше 10 000 000 (десяти миллионов) рублей подлежат одобрению генеральным директором',
         after: 'до подписания.',
+    },
+    taxVatRate: {
+        documentId: 'nk-164',
+        clauseId: '3',
+        title: 'НК РФ, ст. 164, п. 3',
+        meta: LAW_CURRENT_META,
+        before: 'Налогообложение производится',
+        quote: 'по налоговой ставке 22 процента',
+        after: 'в случаях, не указанных в пунктах 1, 2 и 4 настоящей статьи.',
     },
     regulation2023Format: {
         documentId: 'reglament',

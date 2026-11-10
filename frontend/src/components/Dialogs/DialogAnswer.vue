@@ -4,10 +4,10 @@ import {
     ArrowRight,
     CalendarClock,
     Copy,
+    FilePlus2,
     FileSearch,
     Flag,
     MessageCircleQuestion,
-    Sparkles,
     ThumbsDown,
     ThumbsUp,
 } from 'lucide-vue-next';
@@ -91,11 +91,12 @@ function isCiteRevealed(paragraphIndex, partIndex) {
                     :size="18"
                     aria-hidden="true"
                 />
-                <Sparkles
+                <span
                     v-else
-                    :size="18"
-                    aria-hidden="true"
-                />
+                    class="dialog-answer__seal"
+                >
+                    §
+                </span>
             </span>
             <span class="dialog-answer__author">Юрассистент</span>
             <span class="dialog-answer__verdict">{{ answer.verdict }}</span>
@@ -136,6 +137,26 @@ function isCiteRevealed(paragraphIndex, partIndex) {
                     <template v-else>{{ part.text }}</template>
                 </template>
             </p>
+        </div>
+
+        <div
+            v-if="answer.missingInfo?.length"
+            class="dialog-answer__missing"
+        >
+            <span class="dialog-answer__label">Чего не хватает для ответа</span>
+            <ul class="dialog-answer__missing-list">
+                <li
+                    v-for="item in answer.missingInfo"
+                    :key="item"
+                    class="dialog-answer__missing-item"
+                >
+                    <FilePlus2
+                        :size="16"
+                        aria-hidden="true"
+                    />
+                    {{ item }}
+                </li>
+            </ul>
         </div>
 
         <div
@@ -257,7 +278,7 @@ function isCiteRevealed(paragraphIndex, partIndex) {
     box-shadow: $shadow-card;
     animation: fade-up $duration-slow $ease-out both;
 
-    @include gradient-border;
+    @include accent-border;
     @include column($indent-step * 4);
     @include padding('y', 6);
     @include padding('x', 6);
@@ -276,7 +297,7 @@ function isCiteRevealed(paragraphIndex, partIndex) {
         display: flex;
         align-items: flex-start;
         color: $color-amber-ink;
-        border-radius: $radius-xl;
+        border-radius: $radius-sm;
         background: $color-amber;
         font-size: $font-size-sm;
         font-weight: $font-weight-semibold;
@@ -305,7 +326,13 @@ function isCiteRevealed(paragraphIndex, partIndex) {
         height: 34px;
         color: $color-white;
         border-radius: $radius-lg;
-        background: $gradient-brand;
+        background-color: $color-navy;
+    }
+
+    &__seal {
+        font-size: $font-size-lg;
+        font-weight: $font-weight-extrabold;
+        line-height: 1;
     }
 
     &__author {
@@ -337,13 +364,10 @@ function isCiteRevealed(paragraphIndex, partIndex) {
 
     &__changed {
         color: $color-amber-ink;
-        border-radius: $radius-xs;
-        background: $color-amber;
         font-weight: $font-weight-bold;
-        animation: change-flash 1.6s ease-out both;
-        box-decoration-break: clone;
 
-        @include padding('x', 1);
+        @include highlighter($color-highlighter-amber);
+        @include highlighter-draw(0.2s);
 
         &--bold {
             font-weight: $font-weight-extrabold;
@@ -354,14 +378,41 @@ function isCiteRevealed(paragraphIndex, partIndex) {
         color: $color-ink-muted;
         font-size: $font-size-2xs;
         font-weight: $font-weight-extrabold;
-        letter-spacing: 0.06em;
-        text-transform: uppercase;
     }
 
+    &__missing,
     &__checked,
     &__options,
     &__next {
         @include column($indent-step * 2);
+    }
+
+    &__missing-list {
+        margin: 0;
+        padding: 0;
+        list-style: none;
+
+        @include column($indent-step * 1.5);
+    }
+
+    &__missing-item {
+        display: flex;
+        align-items: center;
+        color: $color-peach-deep;
+        border: 1px dashed $color-peach-line;
+        border-radius: $radius-lg;
+        background-color: $color-surface;
+        font-size: $font-size-sm;
+        font-weight: $font-weight-semibold;
+        gap: $indent-step * 2;
+
+        @include padding('y', 2);
+        @include padding('x', 3);
+
+        svg {
+            flex-shrink: 0;
+            color: $color-orange;
+        }
     }
 
     &__checked-list {
@@ -388,12 +439,14 @@ function isCiteRevealed(paragraphIndex, partIndex) {
     &__option {
         @include button-reset;
         @include focus-ring;
+        @include press;
 
         display: inline-flex;
         align-items: center;
         transition:
             border-color $duration ease,
-            background $duration ease;
+            background $duration ease,
+            transform $duration-fast $ease-out;
         color: $color-navy;
         border: 1px solid $color-lavender-line;
         border-radius: $radius-lg;
@@ -441,7 +494,7 @@ function isCiteRevealed(paragraphIndex, partIndex) {
         height: 22px;
         color: $color-white;
         border-radius: $radius-sm;
-        background: $gradient-user;
+        background: $color-action;
         font-size: $font-size-2xs;
         font-weight: $font-weight-extrabold;
     }
@@ -467,13 +520,15 @@ function isCiteRevealed(paragraphIndex, partIndex) {
     &__copy {
         @include button-reset;
         @include focus-ring;
+        @include press;
 
         display: inline-flex;
         align-items: center;
         transition:
             background $duration ease,
             color $duration ease,
-            border-color $duration ease;
+            border-color $duration ease,
+            transform $duration-fast $ease-out;
         color: $color-ink-soft;
         border: 1px solid $color-line;
         border-radius: $radius-pill;
@@ -494,7 +549,11 @@ function isCiteRevealed(paragraphIndex, partIndex) {
     &__feedback-button--active {
         color: $color-white;
         border-color: transparent;
-        background: $gradient-user;
+        background: $color-action;
+
+        svg {
+            animation: cite-pop $duration-slow $ease-back-out;
+        }
 
         @include hover {
             color: $color-white;
@@ -516,8 +575,11 @@ function isCiteRevealed(paragraphIndex, partIndex) {
     &__follow-up {
         @include button-reset;
         @include focus-ring;
+        @include press;
 
-        transition: background $duration ease;
+        transition:
+            background $duration ease,
+            transform $duration-fast $ease-out;
         color: $color-violet;
         border-radius: $radius-pill;
         background: $color-lavender;

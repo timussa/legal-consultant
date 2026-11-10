@@ -238,7 +238,7 @@ export const KNOWLEDGE_BASE_OVERVIEW = Object.freeze({
     teamStats: [
         {id: 'questions', label: 'Вопросов команды за неделю', value: '86'},
         {id: 'refusals', label: 'Обоснованных отказов', value: '14 %'},
-        {id: 'saved', label: 'Сэкономлено на поиске', value: '~31 ч'},
+        {id: 'confirmed', label: 'Отмечены юристами как верные', value: '92 %'},
         {id: 'disputed', label: 'Спорные ответы на проверку', value: '2', isAlert: true},
     ],
     examples: [

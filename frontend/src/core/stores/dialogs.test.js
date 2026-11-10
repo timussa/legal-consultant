@@ -1,6 +1,6 @@
 import {createPinia, setActivePinia} from 'pinia';
 import {beforeEach, describe, expect, it, vi} from 'vitest';
-import {askQuestion, getDialogs, sendFeedback} from '@/core/api/dialogs';
+import {askQuestion, getDialogs, reviewAnswer, sendFeedback} from '@/core/api/dialogs';
 import {ANSWER_STATUSES} from '@/core/constants';
 import {useDialogsStore} from '@/core/stores/dialogs';
 
@@ -8,6 +8,7 @@ vi.mock('@/core/api/dialogs', () => ({
     getDialogs: vi.fn(),
     askQuestion: vi.fn(),
     sendFeedback: vi.fn(),
+    reviewAnswer: vi.fn(),
 }));
 
 const ANSWER = {
@@ -37,6 +38,7 @@ describe('dialogs store', () => {
         getDialogs.mockResolvedValue([structuredClone(DIALOG)]);
         askQuestion.mockResolvedValue(structuredClone(ANSWER));
         sendFeedback.mockResolvedValue(undefined);
+        reviewAnswer.mockResolvedValue(undefined);
     });
 
     it('загружает диалоги один раз', async () => {
@@ -112,5 +114,18 @@ describe('dialogs store', () => {
         sendFeedback.mockRejectedValue(new Error('offline'));
         await store.setFeedback('412', 'wrong');
         expect(store.feedback['412']).toBeNull();
+    });
+
+    it('сохраняет решение руководителя и откатывает при ошибке', async () => {
+        const store = useDialogsStore();
+        const answer = {id: 'team-418', dialogId: '418'};
+
+        expect(await store.review(answer, 'approved')).toBe(true);
+        expect(store.reviews['team-418']).toBe('approved');
+        expect(reviewAnswer).toHaveBeenCalledWith('418', 'approved');
+
+        reviewAnswer.mockRejectedValue(new Error('offline'));
+        expect(await store.review({id: 'team-406', dialogId: '406'}, 'needs-fix')).toBe(false);
+        expect(store.reviews['team-406']).toBe(undefined);
     });
 });

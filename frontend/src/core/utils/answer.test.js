@@ -1,5 +1,11 @@
 import {describe, expect, it} from 'vitest';
-import {buildReferenceNote, buildThreadPath, countCitations, getAnswerText} from '@/core/utils/answer';
+import {
+    buildReferenceNote,
+    buildThreadPath,
+    countCitations,
+    getAnswerText,
+    getQuoteSurroundings,
+} from '@/core/utils/answer';
 
 const PARAGRAPHS = [
     [{text: 'Ставка — '}, {text: '20 %', isBold: true}, {cite: 1}, {text: '.'}],
@@ -30,5 +36,16 @@ describe('answer utils', () => {
 
     it('строит кривую от сноски к источнику', () => {
         expect(buildThreadPath({x: 0, y: 10}, {x: 200, y: 50})).toBe('M0 10 C100 10 100 50 200 50');
+    });
+
+    it('расставляет пробелы вокруг цитаты', () => {
+        expect(getQuoteSurroundings({before: 'Договоры на сумму', after: '.'})).toEqual({
+            before: 'Договоры на сумму ',
+            after: '.',
+        });
+        expect(getQuoteSurroundings({before: '', after: 'до подписания.'})).toEqual({
+            before: '',
+            after: ' до подписания.',
+        });
     });
 });

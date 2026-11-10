@@ -93,10 +93,11 @@ function handleAskFragment() {
                         v-if="isCompare && clause.diff"
                         class="document-body__text"
                     >
-                        {{ clause.diff.prefix }}
+                        <span>{{ clause.diff.prefix }}</span>
                         <del class="document-body__removed">{{ clause.diff.removed }}</del>
+                        <span>&#32;</span>
                         <ins class="document-body__added">{{ clause.diff.added }}</ins>
-                        {{ clause.diff.suffix }}
+                        <span>{{ clause.diff.suffix }}</span>
                     </p>
                     <p
                         v-else-if="isCompare && clause.change?.isAdded"
@@ -108,7 +109,9 @@ function handleAskFragment() {
                         v-else
                         class="document-body__text"
                     >
-                        {{ clause.text }}
+                        <span :class="{'document-body__highlight': clause.id === highlightedClauseId}">
+                            {{ clause.text }}
+                        </span>
                     </p>
 
                     <div
@@ -168,67 +171,65 @@ function handleAskFragment() {
 <style lang="scss">
 .document-body {
     $block: &;
+    $gutter: $indent-step * 16;
 
     position: relative;
-    box-shadow: $shadow-card;
+    border: 1px solid $color-line;
+    border-radius: $radius-md;
+    background-color: $color-paper;
+    box-shadow:
+        0 1px 2px rgba($color-ink, 6%),
+        0 24px 48px -32px rgba($color-ink, 35%);
 
-    @include card($radius-2xl);
-    @include column($indent-step * 8);
-    @include padding('y', 8);
-    @include padding('x', 9);
+    @include column($indent-step * 10);
+    @include padding('y', 14);
+    @include padding('right', 16);
+    @include padding('left', 16);
 
     &__section {
-        scroll-margin-top: $header-height + $indent-step * 6;
+        scroll-margin-top: $header-height + $indent-step * 22;
 
-        @include column($indent-step * 3);
+        @include column($indent-step * 4);
     }
 
     &__section-title {
-        @include heading($font-size-xl);
+        margin: 0;
+        color: $color-ink;
+        font-family: $font-document;
+        font-size: $font-size-xl;
+        font-weight: $font-weight-bold;
+        text-align: center;
     }
 
     &__clause {
-        display: flex;
-        align-items: flex-start;
-        transition: background $duration ease;
-        border-radius: $radius-xl;
-        scroll-margin-top: $header-height + $indent-step * 10;
-        gap: $indent-step * 4;
-
-        @include padding('y', 3);
-        @include padding('x', 3);
-        @include margin('x', -3);
-
-        &--changed {
-            background: $color-peach-soft;
-        }
-
-        &--highlighted {
-            background: $gradient-selected;
-            animation: clause-pulse 1.4s ease-out 2;
-
-            #{$block}__clause-number {
-                color: $color-white;
-                background: $gradient-user;
-            }
-        }
+        position: relative;
+        scroll-margin-top: $header-height + $indent-step * 26;
+        padding-left: $gutter;
     }
 
     &__clause-number {
-        @include flex-center;
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: $gutter - $indent-step * 4;
+        transition: color $duration ease;
+        color: $color-ink-muted;
+        font-family: $font-document;
+        font-size: $font-size-lg;
+        line-height: 1.75;
+        text-align: right;
+    }
 
-        flex-shrink: 0;
-        min-width: 40px;
-        height: 28px;
+    &__clause--changed &__clause-number {
+        color: $color-orange;
+    }
+
+    &__clause--highlighted &__clause-number {
         color: $color-navy;
-        border-radius: $radius-md;
-        background: $color-navy-tint;
-        font-size: $font-size-xs;
-        font-weight: $font-weight-extrabold;
+        font-weight: $font-weight-bold;
     }
 
     &__clause-body {
-        flex: 1;
         min-width: 0;
 
         @include column($indent-step * 2);
@@ -237,29 +238,29 @@ function handleAskFragment() {
     &__text {
         margin: 0;
         color: $color-text-body;
-        font-size: $font-size-base;
+        font-family: $font-document;
+        font-size: $font-size-lg;
         line-height: 1.75;
+        hyphens: auto;
+    }
+
+    &__highlight {
+        @include highlighter($color-highlighter-amber);
+        @include highlighter-draw(0.3s);
     }
 
     &__removed {
         color: $color-peach-ink;
-        border-radius: $radius-xs;
-        background: $color-peach;
-        text-decoration-thickness: 2px;
-
-        @include padding('x', 0.5);
+        text-decoration-color: rgba($color-peach-ink, 70%);
+        text-decoration-thickness: 1.5px;
     }
 
     &__added {
-        color: $color-amber-ink;
-        border-radius: $radius-xs;
-        background: $color-amber;
-        font-weight: $font-weight-bold;
+        color: $color-ink;
         text-decoration: none;
-        animation: change-flash 1.6s ease-out both;
 
-        @include margin('left', 1);
-        @include padding('x', 0.5);
+        @include highlighter($color-highlighter-amber);
+        @include highlighter-draw;
     }
 
     &__marks {
@@ -303,7 +304,7 @@ function handleAskFragment() {
         transform: translate(-50%, calc(-100% - #{$indent-step * 2}));
         color: $color-white;
         border-radius: $radius-pill;
-        background: $gradient-user;
+        background: $color-action;
         box-shadow: $shadow-raised;
         font-size: $font-size-sm;
         font-weight: $font-weight-bold;
@@ -315,17 +316,24 @@ function handleAskFragment() {
     }
 
     @include tablet {
-        @include padding('y', 6);
-        @include padding('x', 5);
+        @include padding('y', 10);
+        @include padding('right', 8);
+        @include padding('left', 6);
     }
 
     @include mobile {
-        @include padding('y', 5);
+        @include padding('y', 6);
         @include padding('x', 4);
 
         &__clause {
-            flex-direction: column;
-            gap: $indent-step * 2;
+            padding-left: 0;
+        }
+
+        &__clause-number {
+            position: static;
+            display: block;
+            width: auto;
+            text-align: left;
         }
     }
 }

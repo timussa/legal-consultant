@@ -102,7 +102,6 @@ function handleScenarioClick(id) {
         display: flex;
         align-items: flex-start;
         border-radius: $radius-3xl;
-        box-shadow: $shadow-raised;
         gap: $indent-step * 5;
     }
 
@@ -159,9 +158,7 @@ function handleScenarioClick(id) {
     }
 
     &__fact-value {
-        background: $gradient-thread;
-        background-clip: text;
-        -webkit-text-fill-color: transparent;
+        color: $color-navy;
 
         @include heading($font-size-2xl);
     }
@@ -223,7 +220,7 @@ function handleScenarioClick(id) {
         &--active {
             color: $color-white;
             border-color: transparent;
-            background: $gradient-user;
+            background: $color-action;
 
             @include hover {
                 color: $color-white;

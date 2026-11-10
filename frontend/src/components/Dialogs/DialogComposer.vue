@@ -87,7 +87,7 @@ function handleKeydown(event) {
     backdrop-filter: blur(12px);
     gap: $indent-step * 2;
 
-    @include gradient-border(1px);
+    @include accent-border(1px);
     @include padding('y', 2);
     @include padding('left', 4);
     @include padding('right', 2);
@@ -122,6 +122,8 @@ function handleKeydown(event) {
     &__send {
         @include button-reset;
         @include focus-ring;
+        @include sheen;
+        @include press;
 
         display: inline-flex;
         align-items: center;
@@ -130,7 +132,7 @@ function handleKeydown(event) {
             transform $duration-fast $ease-out;
         color: $color-white;
         border-radius: $radius-lg;
-        background: $gradient-user;
+        background: $color-action;
         font-weight: $font-weight-bold;
         gap: $indent-step * 2;
 

@@ -1,9 +1,12 @@
 <script setup>
 import {computed} from 'vue';
-import {CalendarDays, Timer} from 'lucide-vue-next';
+import {Timer} from 'lucide-vue-next';
+import {formatLongDate} from '@/core/utils/date';
 
 import UiSegmented from '@/components/Ui/UiSegmented.vue';
 import UiStatusPill from '@/components/Ui/UiStatusPill.vue';
+
+const EDITION_LABEL = 'Регламент';
 
 const props = defineProps({
     /** @type {import('vue').PropType<import('@/core/types/assistant').Dialog>} */
@@ -17,31 +20,46 @@ const eventDate = computed({
     get: () => props.dialog.eventDate ?? '',
     set: (value) => emit('change-date', value),
 });
-const dateOptions = computed(() => (props.dialog.eventDates ?? []).map(({value, label}) => ({value, label})));
+const dateOptions = computed(() =>
+    (props.dialog.eventDates ?? []).map(({value, label, hint}) => ({value, label: hint ? `${label}, ${hint}` : label})),
+);
+const hasDates = computed(() => dateOptions.value.length > 0 && Boolean(props.dialog.eventDate));
 const context = computed(() => props.dialog.answer?.context ?? []);
+const chips = computed(() =>
+    hasDates.value ? context.value.filter((item) => item.label !== EDITION_LABEL) : context.value,
+);
+const editionNote = computed(() => {
+    if (props.isAsking) {
+        return 'Подбираю редакцию документов…';
+    }
+
+    const edition = context.value.find((item) => item.label === EDITION_LABEL);
+
+    return edition ? `Применяется регламент ${edition.value}` : '';
+});
 </script>
 
 <template>
-    <header class="dialog-band">
-        <div class="dialog-band__top">
-            <span class="dialog-band__number">Диалог {{ dialog.number }}</span>
-            <UiStatusPill
-                v-if="dialog.answer && !isAsking"
-                :status="dialog.answer.status"
-                :label="dialog.answer.verdict"
-                is-on-brand
-            />
-        </div>
+    <header :class="['dialog-band', {'dialog-band--dated': hasDates}]">
+        <div class="dialog-band__main">
+            <div class="dialog-band__top">
+                <span class="dialog-band__number">Диалог {{ dialog.number }}</span>
+                <UiStatusPill
+                    v-if="dialog.answer && !isAsking"
+                    :status="dialog.answer.status"
+                    :label="dialog.answer.verdict"
+                    is-on-brand
+                />
+            </div>
 
-        <h1 class="dialog-band__title">{{ dialog.title }}</h1>
+            <h1 class="dialog-band__title">{{ dialog.title }}</h1>
 
-        <div class="dialog-band__bottom">
             <ul
-                v-if="context.length"
+                v-if="chips.length || (dialog.answer && !isAsking)"
                 class="dialog-band__context"
             >
                 <li
-                    v-for="item in context"
+                    v-for="item in chips"
                     :key="item.label"
                     class="dialog-band__chip"
                 >
@@ -59,26 +77,33 @@ const context = computed(() => props.dialog.answer?.context ?? []);
                     {{ dialog.answer.totalDurationLabel }}
                 </li>
             </ul>
+        </div>
 
-            <div
-                v-if="dateOptions.length"
-                class="dialog-band__date"
+        <div
+            v-if="hasDates"
+            class="dialog-band__date"
+        >
+            <span class="dialog-band__date-label">Дата события</span>
+            <Transition
+                name="dialog-band__date-value"
+                mode="out-in"
             >
-                <span class="dialog-band__date-label">
-                    <CalendarDays
-                        :size="15"
-                        aria-hidden="true"
-                    />
-                    Дата события
+                <span
+                    :key="eventDate"
+                    class="dialog-band__date-value"
+                >
+                    {{ formatLongDate(eventDate) }}
                 </span>
-                <UiSegmented
-                    v-model="eventDate"
-                    :options="dateOptions"
-                    label="Дата события"
-                    :is-disabled="isAsking"
-                    is-on-brand
-                />
-            </div>
+            </Transition>
+            <span class="dialog-band__date-edition">{{ editionNote }}</span>
+            <UiSegmented
+                v-model="eventDate"
+                class="dialog-band__date-switch"
+                :options="dateOptions"
+                label="Дата события"
+                :is-disabled="isAsking"
+                is-on-brand
+            />
         </div>
     </header>
 </template>
@@ -86,30 +111,23 @@ const context = computed(() => props.dialog.answer?.context ?? []);
 <style lang="scss">
 .dialog-band {
     @include brand-band;
-    @include column($indent-step * 3);
     @include padding('y', 6);
     @include padding('x', 7);
 
+    display: grid;
+    align-items: center;
     border-radius: $radius-3xl;
-    box-shadow: $shadow-raised;
+    grid-template-columns: minmax(0, 1fr);
+    gap: $indent-step * 8;
 
-    &::after {
-        position: absolute;
-        top: -120px;
-        right: -80px;
-        width: 360px;
-        height: 360px;
-        border-radius: $radius-pill;
-        background: radial-gradient(circle, rgba($color-orange-soft, 45%), transparent 65%);
-        content: '';
-        pointer-events: none;
+    &--dated {
+        grid-template-columns: minmax(0, 1fr) auto;
     }
 
-    &__top,
-    &__bottom,
-    &__title {
-        position: relative;
-        z-index: $ui-index-base;
+    &__main {
+        min-width: 0;
+
+        @include column($indent-step * 3);
     }
 
     &__top {
@@ -129,14 +147,6 @@ const context = computed(() => props.dialog.answer?.context ?? []);
         line-height: 1.2;
 
         @include heading($font-size-3xl);
-    }
-
-    &__bottom {
-        display: flex;
-        flex-wrap: wrap;
-        align-items: center;
-        justify-content: space-between;
-        gap: $indent-step * 4;
     }
 
     &__context {
@@ -162,18 +172,64 @@ const context = computed(() => props.dialog.answer?.context ?? []);
 
     &__date {
         display: flex;
-        flex-wrap: wrap;
-        align-items: center;
-        gap: $indent-step * 3;
+        flex-direction: column;
+        align-items: flex-end;
+        text-align: right;
+        gap: $indent-step;
     }
 
     &__date-label {
-        display: inline-flex;
-        align-items: center;
         color: $color-on-brand-soft;
         font-size: $font-size-xs;
         font-weight: $font-weight-bold;
-        gap: $indent-step * 1.5;
+    }
+
+    &__date-value {
+        font-family: $font-document;
+        font-size: $font-size-display;
+        font-weight: $font-weight-regular;
+        line-height: 1.1;
+        white-space: nowrap;
+
+        &-enter-active,
+        &-leave-active {
+            transition:
+                opacity $duration ease,
+                transform $duration $ease-out;
+        }
+
+        &-enter-from {
+            transform: translateY(6px);
+            opacity: 0;
+        }
+
+        &-leave-to {
+            transform: translateY(-6px);
+            opacity: 0;
+        }
+    }
+
+    &__date-edition {
+        min-height: 1.5em;
+        color: $color-on-brand-muted;
+        font-family: $font-document;
+        font-size: $font-size-base;
+        font-style: italic;
+    }
+
+    &__date-switch {
+        @include margin('top', 2);
+    }
+
+    @include laptop {
+        &--dated {
+            grid-template-columns: minmax(0, 1fr);
+        }
+
+        &__date {
+            align-items: flex-start;
+            text-align: left;
+        }
     }
 
     @include mobile {
@@ -184,6 +240,11 @@ const context = computed(() => props.dialog.answer?.context ?? []);
 
         &__title {
             font-size: $font-size-xl;
+        }
+
+        &__date-value {
+            font-size: $font-size-4xl;
+            white-space: normal;
         }
     }
 }

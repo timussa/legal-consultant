@@ -45,9 +45,7 @@ defineProps({
         cursor: not-allowed;
     }
 
-    &:not(:disabled):active {
-        transform: translateY(1px);
-    }
+    @include press;
 
     &--small {
         border-radius: $radius-md;
@@ -58,8 +56,10 @@ defineProps({
     }
 
     &--primary {
+        @include sheen;
+
         color: $color-white;
-        background: $gradient-user;
+        background: $color-action;
         box-shadow: $shadow-bubble;
 
         &:not(:disabled) {

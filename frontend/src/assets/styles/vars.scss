@@ -4,12 +4,14 @@ $ui-index-header: 10;
 
 $indent-step: 4px;
 
+$duration-press: 0.12s;
 $duration-fast: 0.15s;
 $duration: 0.25s;
-$duration-slow: 0.45s;
+$duration-slow: 0.3s;
 $duration-step: 600ms;
 
-$ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+$ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+$ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
 $ease-back-out: cubic-bezier(0.34, 1.56, 0.64, 1);
 
 $laptop: 1240px;
@@ -18,6 +20,7 @@ $mobile: 540px;
 
 $font-primary: 'Manrope', system-ui, sans-serif;
 $font-mono: ui-monospace, 'SFMono-Regular', monospace;
+$font-document: 'PT Serif', Georgia, 'Times New Roman', serif;
 
 $font-size-2xs: 11px;
 $font-size-xs: 12px;
@@ -29,6 +32,7 @@ $font-size-xl: 18px;
 $font-size-2xl: 20px;
 $font-size-3xl: 24px;
 $font-size-4xl: 32px;
+$font-size-display: 40px;
 
 $font-weight-regular: 400;
 $font-weight-medium: 500;
@@ -80,8 +84,12 @@ $color-peach-line: #f6c7a9;
 $color-peach-ink: #9a3a0a;
 $color-peach-deep: #6e2a07;
 $color-mark: #fde3d3;
+$color-highlighter: #ffd9b8;
+$color-highlighter-amber: #ffe9a8;
+$color-paper: #fffdf9;
 $color-amber: #fff2cc;
 $color-amber-ink: #6b4e00;
+$color-gold: #d99a00;
 $color-icon-tile: #e4e8f3;
 $color-on-brand-soft: #d8d6ff;
 $color-on-brand-muted: #e2e0ff;
@@ -95,12 +103,13 @@ $gradient-brand: linear-gradient(
     $color-violet-bright 76%,
     $color-orange-soft 100%
 );
+$color-action: $color-navy;
+$color-action-hover: $color-indigo;
+$color-selected: $color-lavender-soft;
+
 $gradient-thread: linear-gradient(115deg, $color-navy, $color-violet-bright 60%, $color-orange-soft);
-$gradient-user: linear-gradient(120deg, $color-navy, $color-violet);
 $color-peach-whisper: #fff1e8;
 $color-flash: #ffd9bf;
-
-$gradient-selected: linear-gradient(120deg, $color-lavender, $color-peach-whisper);
 
 $shadow-card: 0 18px 40px -30px rgba($color-ink, 45%);
 $shadow-raised: 0 16px 36px -22px rgba($color-violet, 60%);

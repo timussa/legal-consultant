@@ -1,6 +1,6 @@
 import {defineStore} from 'pinia';
 import {computed, ref} from 'vue';
-import {askQuestion, getDialogs, sendFeedback} from '@/core/api/dialogs';
+import {askQuestion, getDialogs, reviewAnswer, sendFeedback} from '@/core/api/dialogs';
 import {ANSWER_STATUSES} from '@/core/constants';
 import {getErrorMessage} from '@/core/helpers/getErrorMessage';
 
@@ -26,6 +26,7 @@ export const useDialogsStore = defineStore('dialogs', () => {
     const askingDialogId = ref(/** @type {string | null} */ (null));
     const askError = ref(/** @type {string | null} */ (null));
     const feedback = ref(/** @type {Record<string, string | null>} */ ({}));
+    const reviews = ref(/** @type {Record<string, string>} */ ({}));
 
     const nextNumber = computed(() => {
         const numbers = dialogs.value.map((dialog) => Number(dialog.id)).filter(Number.isFinite);
@@ -185,6 +186,26 @@ export const useDialogsStore = defineStore('dialogs', () => {
         }
     }
 
+    /**
+     * @param {{id: string, dialogId: string}} answer
+     * @param {string} decision
+     * @returns {Promise<boolean>} удалось ли сохранить решение
+     */
+    async function review(answer, decision) {
+        reviews.value[answer.id] = decision;
+
+        try {
+            await reviewAnswer(answer.dialogId, decision);
+
+            return true;
+        } catch (error) {
+            delete reviews.value[answer.id];
+            askError.value = getErrorMessage(error);
+
+            return false;
+        }
+    }
+
     return {
         dialogs,
         isLoading,
@@ -192,10 +213,12 @@ export const useDialogsStore = defineStore('dialogs', () => {
         askingDialogId,
         askError,
         feedback,
+        reviews,
         getDialog,
         load,
         ask,
         changeEventDate,
         setFeedback,
+        review,
     };
 });

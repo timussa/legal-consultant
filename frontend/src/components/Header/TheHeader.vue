@@ -256,7 +256,7 @@ async function handleSearchSubmit() {
         height: 38px;
         color: $color-white;
         border-radius: $radius-pill;
-        background: $gradient-user;
+        background: $color-action;
         font-size: $font-size-sm;
         font-weight: $font-weight-extrabold;
     }

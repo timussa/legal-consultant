@@ -1,6 +1,7 @@
 <script setup>
 import {BookOpenCheck, ExternalLink} from 'lucide-vue-next';
 import {ROUTE_NAMES} from '@/core/constants';
+import {getQuoteSurroundings} from '@/core/utils/answer';
 
 defineProps({
     /** @type {import('vue').PropType<import('@/core/types/assistant').Source[]>} */
@@ -70,9 +71,9 @@ function getTarget(source, cite, dialogId) {
                     </span>
                 </div>
                 <blockquote class="dialog-sources__quote">
-                    {{ source.before }}
+                    <span>{{ getQuoteSurroundings(source).before }}</span>
                     <mark class="dialog-sources__mark">{{ source.quote }}</mark>
-                    {{ source.after }}
+                    <span>{{ getQuoteSurroundings(source).after }}</span>
                 </blockquote>
                 <RouterLink
                     class="dialog-sources__link"
@@ -141,7 +142,9 @@ function getTarget(source, cite, dialogId) {
             transform: translateX(-4px);
             box-shadow: $shadow-raised;
 
-            @include gradient-border;
+            @include accent-border;
+
+            border-color: $color-navy;
         }
 
         &--muted {
@@ -184,21 +187,25 @@ function getTarget(source, cite, dialogId) {
     &__quote {
         margin: 0;
         color: $color-ink-soft;
-        border-left: 3px solid $color-lavender-line;
-        font-size: $font-size-sm;
-        line-height: 1.6;
+        font-family: $font-document;
+        font-size: $font-size-base;
+        line-height: 1.65;
+        quotes: '«' '»';
 
-        @include padding('left', 3);
+        &::before {
+            content: open-quote;
+        }
+
+        &::after {
+            content: close-quote;
+        }
     }
 
     &__mark {
         color: $color-ink;
-        border-radius: $radius-xs;
-        background: $color-mark;
-        font-weight: $font-weight-semibold;
-        box-decoration-break: clone;
 
-        @include padding('x', 0.5);
+        @include highlighter;
+        @include highlighter-draw(0.15s);
     }
 
     &__link {

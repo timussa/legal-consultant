@@ -116,7 +116,7 @@ const emit = defineEmits(['select']);
 
         &--active {
             color: $color-navy;
-            background: $gradient-selected;
+            background: $color-selected;
             font-weight: $font-weight-bold;
         }
 

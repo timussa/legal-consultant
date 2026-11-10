@@ -180,7 +180,7 @@ function getLineState(id) {
             color: $color-white;
             border: none;
             border-radius: $radius-pill;
-            background: $gradient-user;
+            background: $color-action;
             box-shadow: $shadow-bubble;
         }
 
@@ -189,7 +189,7 @@ function getLineState(id) {
         }
 
         &--action {
-            @include gradient-border(1px);
+            @include accent-border(1px);
         }
 
         &--decision {
@@ -201,7 +201,7 @@ function getLineState(id) {
                 box-shadow: none;
             }
 
-            @include padding('x', 5);
+            @include padding('x', 0);
         }
 
         &--clarification {
@@ -242,7 +242,7 @@ function getLineState(id) {
 
     &__diamond {
         position: absolute;
-        inset: 17%;
+        inset: 14%;
         transform: rotate(45deg);
         border-radius: $radius-lg;
         background: $color-lavender;
@@ -250,7 +250,7 @@ function getLineState(id) {
     }
 
     &__node--lit &__diamond {
-        background: $gradient-selected;
+        background: $color-selected;
         box-shadow: inset 0 0 0 1.5px $color-violet-bright;
     }
 
@@ -259,6 +259,13 @@ function getLineState(id) {
         font-size: $font-size-xs;
         font-weight: $font-weight-bold;
         line-height: 1.35;
+    }
+
+    &__node--decision &__label {
+        max-width: 80px;
+        font-size: $font-size-2xs;
+        line-height: 1.3;
+        hyphens: none;
     }
 
     &__line {
@@ -420,11 +427,11 @@ function getLineState(id) {
         &--start,
         &--finish {
             border-radius: $radius-pill;
-            background: $gradient-user;
+            background: $color-action;
         }
 
         &--action {
-            @include gradient-border(1.5px);
+            @include accent-border(1.5px);
         }
 
         &--decision {

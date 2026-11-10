@@ -59,7 +59,7 @@ function handleReplay() {
                 :size="18"
                 aria-hidden="true"
             />
-            Ищем в базе знаний и выбираем редакции документов…
+            Ищу в базе знаний и подбираю редакции документов…
         </div>
 
         <template v-else>
@@ -271,7 +271,7 @@ function handleReplay() {
 
         &--done #{$block}__marker {
             color: $color-white;
-            background: $gradient-user;
+            background: $color-action;
         }
     }
 
@@ -308,8 +308,8 @@ function handleReplay() {
 
     &__step-time {
         color: $color-ink-faint;
-        font-family: $font-mono;
         font-size: $font-size-2xs;
+        font-variant-numeric: tabular-nums;
     }
 
     @include mobile {

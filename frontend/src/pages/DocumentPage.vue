@@ -11,6 +11,7 @@ import DocumentAside from '@/components/Document/DocumentAside.vue';
 import DocumentBand from '@/components/Document/DocumentBand.vue';
 import DocumentBody from '@/components/Document/DocumentBody.vue';
 import DocumentToc from '@/components/Document/DocumentToc.vue';
+import DocumentToolbar from '@/components/Document/DocumentToolbar.vue';
 import UiState from '@/components/Ui/UiState.vue';
 
 const route = useRoute();
@@ -111,7 +112,7 @@ function handleAskFragment(fragment) {
             v-if="!document"
             :is-loading="isLoading"
             :error="error ?? notFoundError"
-            loading-text="Открываем документ…"
+            loading-text="Открываю документ…"
             @retry="reload"
         />
 
@@ -141,13 +142,7 @@ function handleAskFragment(fragment) {
                 </RouterLink>
             </div>
 
-            <DocumentBand
-                v-model:edition-id="editionId"
-                v-model:is-compare="isCompare"
-                :document="document"
-                :changed-count="changedClauses.length"
-                :can-compare="canCompare"
-            />
+            <DocumentBand :document="document" />
 
             <div class="document-page__grid">
                 <DocumentToc
@@ -159,14 +154,24 @@ function handleAskFragment(fragment) {
                     :active-section-id="activeSectionId"
                     @select="handleSelectSection"
                 />
-                <DocumentBody
-                    :document="document"
-                    :edition-id="editionId"
-                    :is-compare="isCompare"
-                    :changed-clauses="changedClauses"
-                    :highlighted-clause-id="highlightedClauseId"
-                    @ask-fragment="handleAskFragment"
-                />
+                <div class="document-page__main">
+                    <DocumentToolbar
+                        v-model:edition-id="editionId"
+                        v-model:is-compare="isCompare"
+                        :document="document"
+                        :changed-clauses="changedClauses"
+                        :can-compare="canCompare"
+                        @go-to-change="handleSelectClause"
+                    />
+                    <DocumentBody
+                        :document="document"
+                        :edition-id="editionId"
+                        :is-compare="isCompare"
+                        :changed-clauses="changedClauses"
+                        :highlighted-clause-id="highlightedClauseId"
+                        @ask-fragment="handleAskFragment"
+                    />
+                </div>
                 <DocumentAside
                     class="document-page__aside"
                     :document="document"
@@ -231,7 +236,13 @@ function handleAskFragment(fragment) {
     &__toc,
     &__aside {
         position: sticky;
-        top: $header-height + $indent-step * 6;
+        top: $header-height + $indent-step * 3;
+    }
+
+    &__main {
+        min-width: 0;
+
+        @include column($indent-step * 4);
     }
 
     &__hint {

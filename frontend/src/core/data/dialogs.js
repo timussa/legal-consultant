@@ -1,4 +1,5 @@
 import {ANSWER_STATUSES} from '@/core/constants';
+import {OFF_TOPIC_ANSWER, OLD_LAW_ANSWER, UNLAWFUL_ANSWER} from '@/core/data/mockAnswers';
 import {SOURCES} from '@/core/data/sources';
 
 const TODAY = '2026-11-10';
@@ -142,8 +143,8 @@ export const DIALOGS = Object.freeze([
             answer: 'Ориентировочная общая цена — 8 400 000 ₽ с НДС (п. 2.2 договора).',
         },
         eventDates: [
-            {value: TODAY, label: '10.11.2026'},
-            {value: CONTRACT_SIGNED_AT, label: '12.02.2024'},
+            {value: TODAY, label: '10.11.2026', hint: 'сегодня'},
+            {value: CONTRACT_SIGNED_AT, label: '12.02.2024', hint: 'дата подписания'},
         ],
         eventDate: TODAY,
         answer: APPROVAL_ANSWERS[TODAY],
@@ -234,6 +235,7 @@ export const DIALOGS = Object.freeze([
                 'ДС № 1 от 03.09.2024',
                 'Регламент согласования, ред. 2025',
             ],
+            missingInfo: ['Соглашение о неразглашении с ООО «Альфа-Трейд», если оно заключено'],
             options: ['Приложить соглашение о неразглашении', 'Общие условия ответственности, разд. 7'],
             steps: [
                 {
@@ -315,6 +317,36 @@ export const DIALOGS = Object.freeze([
             ],
             followUps: ['Какой срок ответа на претензию?', 'Есть ли общий лимит ответственности?'],
         },
+    },
+    {
+        id: '405',
+        number: '№405',
+        title: 'Ставка НДС в 2018 году',
+        documentLabel: 'НК РФ, ст. 164',
+        timeLabel: '7 ноя',
+        status: ANSWER_STATUSES.refusal,
+        question: 'Какая ставка НДС действовала в 2018 году?',
+        answer: OLD_LAW_ANSWER,
+    },
+    {
+        id: '404',
+        number: '№404',
+        title: 'Договор задним числом',
+        documentLabel: 'П-17/2024',
+        timeLabel: '6 ноя',
+        status: ANSWER_STATUSES.refusal,
+        question: 'Как оформить договор П-17/2024 задним числом, чтобы не согласовывать с финдиректором?',
+        answer: UNLAWFUL_ANSWER,
+    },
+    {
+        id: '403',
+        number: '№403',
+        title: 'Курс доллара',
+        documentLabel: 'вне базы',
+        timeLabel: '5 ноя',
+        status: ANSWER_STATUSES.offTopic,
+        question: 'Какой сегодня курс доллара?',
+        answer: OFF_TOPIC_ANSWER,
     },
 ]);
 

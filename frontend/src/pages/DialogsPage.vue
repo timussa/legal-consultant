@@ -28,6 +28,7 @@ const toastStore = useToastStore();
 const {dialogs, isLoading, loadError, askingDialogId, askError, feedback} = storeToRefs(dialogsStore);
 
 const workspace = ref(null);
+const sourcesPanel = ref(null);
 const hoveredCite = ref(null);
 const pinnedCite = ref(null);
 
@@ -89,8 +90,31 @@ function handleChangeDate(eventDate) {
 }
 
 /** @param {number} cite */
+function scrollSourceIntoView(cite) {
+    const panel = sourcesPanel.value?.$el;
+    const card = panel?.querySelector(`[data-source-anchor="${cite}"]`);
+
+    if (!card || panel.scrollHeight <= panel.clientHeight) {
+        return;
+    }
+
+    const offset = 16;
+    const panelRect = panel.getBoundingClientRect();
+    const cardRect = card.getBoundingClientRect();
+    const visibleTop = Math.max(panelRect.top, 0);
+    const visibleBottom = Math.min(panelRect.bottom, window.innerHeight);
+
+    if (cardRect.top < visibleTop) {
+        panel.scrollTo({top: panel.scrollTop + cardRect.top - visibleTop - offset, behavior: 'smooth'});
+    } else if (cardRect.bottom > visibleBottom) {
+        panel.scrollTo({top: panel.scrollTop + cardRect.bottom - visibleBottom + offset, behavior: 'smooth'});
+    }
+}
+
+/** @param {number} cite */
 function handleActivateCite(cite) {
     hoveredCite.value = cite;
+    scrollSourceIntoView(cite);
 }
 
 /** @param {number} cite */
@@ -105,9 +129,7 @@ async function handleSelectCite(cite) {
     pinnedCite.value = pinnedCite.value === cite ? null : cite;
 
     await nextTick();
-    workspace.value
-        ?.querySelector(`[data-source-anchor="${cite}"]`)
-        ?.scrollIntoView({block: 'nearest', behavior: 'smooth'});
+    scrollSourceIntoView(cite);
 }
 
 /** @param {string} value */
@@ -154,7 +176,7 @@ async function handleCopy() {
                 v-else-if="!dialog"
                 :is-loading="isLoading"
                 :error="loadError ?? (isLoading ? null : 'Диалог не найден. Возможно, он был удалён.')"
-                loading-text="Загружаем диалоги…"
+                loading-text="Поднимаю историю диалогов…"
                 @retry="dialogsStore.load"
             />
 
@@ -239,6 +261,7 @@ async function handleCopy() {
 
                     <DialogSources
                         v-if="isAnswerVisible"
+                        ref="sourcesPanel"
                         class="dialogs-page__sources"
                         :sources="answer.sources"
                         :active-cite="activeCite"
@@ -332,7 +355,7 @@ async function handleCopy() {
         margin: 0;
         color: $color-white;
         border-radius: $radius-2xl $radius-2xl $radius-xs $radius-2xl;
-        background: $gradient-user;
+        background: $color-action;
         box-shadow: $shadow-bubble;
         font-size: $font-size-base;
         font-weight: $font-weight-medium;
@@ -360,8 +383,10 @@ async function handleCopy() {
         top: $header-height + $indent-step * 6;
         overflow-y: auto;
         max-height: calc(100vh - #{$header-height + $indent-step * 12});
+        scrollbar-width: thin;
 
         @include padding('right', 1);
+        @include padding('bottom', 60);
     }
 
     @include laptop {
@@ -373,6 +398,8 @@ async function handleCopy() {
         &__sources {
             position: static;
             max-height: none;
+
+            @include padding('bottom', 0);
         }
     }
 

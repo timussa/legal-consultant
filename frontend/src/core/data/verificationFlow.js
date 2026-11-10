@@ -52,7 +52,7 @@ export const FLOW_NODES = Object.freeze([
     {
         id: 'threshold',
         kind: FLOW_NODE_KINDS.decision,
-        label: 'Есть источники выше 0,80?',
+        label: 'Источники выше 0,80?',
         x: 760,
         y: 200,
         width: 120,
@@ -79,7 +79,7 @@ export const FLOW_NODES = Object.freeze([
     {
         id: 'selfcheck',
         kind: FLOW_NODE_KINDS.decision,
-        label: 'Самопроверка: всё подтверждено?',
+        label: 'Самопроверка пройдена?',
         x: 760,
         y: 460,
         width: 120,

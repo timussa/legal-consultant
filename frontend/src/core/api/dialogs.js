@@ -60,3 +60,16 @@ export function sendFeedback(dialogId, value) {
 
     return http.post(`/v1/dialogs/${dialogId}/feedback`, {value});
 }
+
+/**
+ * @param {string} dialogId
+ * @param {string} decision
+ * @returns {Promise<void>}
+ */
+export function reviewAnswer(dialogId, decision) {
+    if (USE_MOCKS) {
+        return resolveMock(undefined);
+    }
+
+    return http.post(`/v1/dialogs/${dialogId}/review`, {decision});
+}

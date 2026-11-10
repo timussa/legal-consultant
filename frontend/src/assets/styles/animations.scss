@@ -71,3 +71,13 @@
         box-shadow: 0 0 0 0 rgba($color-violet-bright, 0%);
     }
 }
+
+@keyframes highlighter-draw {
+    from {
+        background-size: 0% 78%;
+    }
+
+    to {
+        background-size: 100% 78%;
+    }
+}

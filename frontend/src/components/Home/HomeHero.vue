@@ -2,6 +2,7 @@
 import {computed, ref} from 'vue';
 import {LoaderCircle, Send} from 'lucide-vue-next';
 import {BRAND_IMAGE} from '@/assets/images';
+import {getGreeting} from '@/core/utils/date';
 
 const props = defineProps({
     userName: {type: String, required: true},
@@ -15,6 +16,7 @@ const emit = defineEmits(['ask']);
 const question = ref('');
 
 const firstName = computed(() => props.userName.split(' ')[0]);
+const greeting = computed(() => `${getGreeting(new Date().getHours())}, ${firstName.value}`);
 const canAsk = computed(() => question.value.trim().length > 0 && !props.isAsking);
 
 function handleSubmit() {
@@ -33,7 +35,7 @@ function handleExampleClick(example) {
 <template>
     <section class="home-hero">
         <div class="home-hero__content">
-            <p class="home-hero__greeting">Добрый день, {{ firstName }}</p>
+            <p class="home-hero__greeting">{{ greeting }}</p>
             <h1 class="home-hero__title">Ответ по базе знаний — со ссылкой на каждый пункт</h1>
             <p class="home-hero__lead">
                 Договоры, регламенты и законы в нужной редакции. Если в документах ответа нет, ассистент скажет об этом
@@ -111,36 +113,11 @@ function handleExampleClick(example) {
     display: grid;
     align-items: center;
     border-radius: $radius-3xl;
-    box-shadow: $shadow-raised;
     grid-template-columns: minmax(0, 1fr) 300px;
     gap: $indent-step * 6;
 
     @include padding('y', 9);
     @include padding('x', 10);
-
-    &::before,
-    &::after {
-        position: absolute;
-        border-radius: $radius-pill;
-        content: '';
-        pointer-events: none;
-    }
-
-    &::before {
-        top: -140px;
-        right: 120px;
-        width: 420px;
-        height: 420px;
-        background: radial-gradient(circle, rgba($color-white, 18%), transparent 65%);
-    }
-
-    &::after {
-        right: -60px;
-        bottom: -160px;
-        width: 380px;
-        height: 380px;
-        background: radial-gradient(circle, rgba($color-orange-soft, 45%), transparent 65%);
-    }
 
     &__content {
         position: relative;
@@ -187,8 +164,6 @@ function handleExampleClick(example) {
         color: $color-on-brand-soft;
         font-size: $font-size-xs;
         font-weight: $font-weight-bold;
-        letter-spacing: 0.04em;
-        text-transform: uppercase;
     }
 
     &__field {
@@ -221,6 +196,8 @@ function handleExampleClick(example) {
     &__send {
         @include button-reset;
         @include focus-ring;
+        @include sheen;
+        @include press;
 
         display: inline-flex;
         align-items: center;
@@ -229,7 +206,7 @@ function handleExampleClick(example) {
             opacity $duration ease;
         color: $color-white;
         border-radius: $radius-lg;
-        background: $gradient-user;
+        background: $color-action;
         font-weight: $font-weight-bold;
         gap: $indent-step * 2;
 
@@ -261,8 +238,11 @@ function handleExampleClick(example) {
     &__example {
         @include button-reset;
         @include focus-ring;
+        @include press;
 
-        transition: background $duration ease;
+        transition:
+            background-color $duration ease,
+            transform $duration-fast $ease-out;
         color: $color-white;
         border: 1px solid rgba($color-white, 28%);
         border-radius: $radius-pill;

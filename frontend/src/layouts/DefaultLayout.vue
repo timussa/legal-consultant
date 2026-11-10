@@ -28,7 +28,7 @@ onMounted(dialogsStore.load);
 .default-layout {
     min-height: 100vh;
 
-    @include soft-glows;
+    background-color: $color-page;
 
     &__body {
         display: flex;

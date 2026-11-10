@@ -48,3 +48,15 @@ export function buildThreadPath(from, to) {
 
     return `M${from.x} ${from.y} C${from.x + bend} ${from.y} ${to.x - bend} ${to.y} ${to.x} ${to.y}`;
 }
+
+/**
+ * Склеивает текст до и после цитаты с правильными пробелами.
+ * @param {{before: string, after: string}} source
+ * @returns {{before: string, after: string}}
+ */
+export function getQuoteSurroundings(source) {
+    const before = source.before ? `${source.before.trimEnd()} ` : '';
+    const after = source.after.trimStart();
+
+    return {before, after: /^[.,;:!?)»]/.test(after) || !after ? after : ` ${after}`};
+}

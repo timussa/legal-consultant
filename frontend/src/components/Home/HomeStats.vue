@@ -82,9 +82,7 @@ const items = computed(() => [
 
     &__value {
         line-height: 1;
-        background: $gradient-thread;
-        background-clip: text;
-        -webkit-text-fill-color: transparent;
+        color: $color-navy;
 
         @include heading($font-size-4xl);
     }

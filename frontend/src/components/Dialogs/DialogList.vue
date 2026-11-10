@@ -48,7 +48,7 @@ defineProps({
                             v-if="dialog.id === askingDialogId"
                             class="dialog-list__spinner"
                             :size="16"
-                            aria-label="Ищем ответ"
+                            aria-label="Ищу ответ"
                         />
                         <UiStatusPill
                             v-else-if="dialog.answer"
@@ -69,8 +69,11 @@ defineProps({
 
     &__new {
         @include focus-ring;
+        @include sheen;
+        @include press;
 
         display: flex;
+        flex-shrink: 0;
         align-items: center;
         justify-content: center;
         transition:
@@ -78,7 +81,7 @@ defineProps({
             box-shadow $duration ease;
         color: $color-white;
         border-radius: $radius-xl;
-        background: $gradient-user;
+        background: $color-action;
         box-shadow: $shadow-bubble;
         font-size: $font-size-md;
         font-weight: $font-weight-bold;
@@ -96,8 +99,6 @@ defineProps({
     &__title {
         color: $color-ink-muted;
         font-size: $font-size-xs;
-        letter-spacing: 0.06em;
-        text-transform: uppercase;
 
         @include heading($font-size-xs);
         @include margin('top', 2);
@@ -119,22 +120,26 @@ defineProps({
 
         transition:
             border-color $duration ease,
-            background $duration ease,
-            box-shadow $duration ease;
+            background-color $duration ease,
+            box-shadow $duration ease,
+            transform $duration $ease-out;
         color: $color-ink;
-        border: 1px solid transparent;
+        border: 1px solid $color-line;
         border-radius: $radius-xl;
+        background-color: $color-surface;
+        box-shadow: $shadow-soft;
         text-decoration: none;
 
         @include hover {
-            border-color: $color-line;
-            background: $color-surface;
+            transform: translateY(-1px);
+            border-color: $color-lavender-line;
+            box-shadow: $shadow-card;
         }
 
         &--active {
             border-color: $color-lavender-line;
-            background: $gradient-selected;
-            box-shadow: $shadow-soft;
+            background: $color-selected;
+            box-shadow: $shadow-card;
 
             #{$block}__number {
                 color: $color-violet;
@@ -183,11 +188,6 @@ defineProps({
 
         &__items > li {
             flex: 0 0 220px;
-        }
-
-        &__item {
-            border-color: $color-line;
-            background: $color-surface;
         }
     }
 }

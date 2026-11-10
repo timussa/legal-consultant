@@ -1,9 +1,10 @@
 <script setup>
+import {computed} from 'vue';
 import {storeToRefs} from 'pinia';
 import {useRouter} from 'vue-router';
 import {getKnowledgeBaseOverview} from '@/core/api/knowledgeBase';
 import {useRequest} from '@/core/composables/useRequest';
-import {ROUTE_NAMES} from '@/core/constants';
+import {ANSWER_STATUSES, REVIEW_DECISIONS, ROUTE_NAMES} from '@/core/constants';
 import {useDialogsStore} from '@/core/stores/dialogs';
 import {useSessionStore} from '@/core/stores/session';
 import {useToastStore} from '@/core/stores/toast';
@@ -11,6 +12,7 @@ import {useToastStore} from '@/core/stores/toast';
 import HomeAffected from '@/components/Home/HomeAffected.vue';
 import HomeHero from '@/components/Home/HomeHero.vue';
 import HomeRecentAnswers from '@/components/Home/HomeRecentAnswers.vue';
+import HomeReview from '@/components/Home/HomeReview.vue';
 import HomeSections from '@/components/Home/HomeSections.vue';
 import HomeStats from '@/components/Home/HomeStats.vue';
 import HomeTeamStats from '@/components/Home/HomeTeamStats.vue';
@@ -21,16 +23,36 @@ const router = useRouter();
 const dialogsStore = useDialogsStore();
 const sessionStore = useSessionStore();
 const toastStore = useToastStore();
-const {askingDialogId} = storeToRefs(dialogsStore);
+const {askingDialogId, reviews} = storeToRefs(dialogsStore);
 const {isHead, user} = storeToRefs(sessionStore);
 
 const {data: overview, isLoading, error, reload} = useRequest(getKnowledgeBaseOverview);
+
+const disputedAnswers = computed(
+    () => overview.value?.teamAnswers.filter((answer) => answer.status === ANSWER_STATUSES.disputed) ?? [],
+);
 
 /** @param {string} question */
 async function handleAsk(question) {
     const dialogId = await dialogsStore.ask(question);
 
     router.push({name: ROUTE_NAMES.dialogs, params: {dialogId}});
+}
+
+/**
+ * @param {import('@/core/types/knowledgeBase').RecentAnswer} answer
+ * @param {string} decision
+ */
+async function handleReview(answer, decision) {
+    const isSaved = await dialogsStore.review(answer, decision);
+
+    if (isSaved) {
+        toastStore.show(
+            decision === REVIEW_DECISIONS.approved
+                ? `${answer.number}: ответ подтверждён`
+                : `${answer.number}: отправлено автору на доработку`,
+        );
+    }
 }
 
 /** @param {import('@/core/types/knowledgeBase').KnowledgeSection} section */
@@ -52,7 +74,7 @@ function handleSectionUnavailable(section) {
             v-if="!overview"
             :is-loading="isLoading"
             :error="error"
-            loading-text="Загружаем базу знаний…"
+            loading-text="Открываю базу знаний…"
             @retry="reload"
         />
 
@@ -61,6 +83,12 @@ function handleSectionUnavailable(section) {
             <HomeTeamStats
                 v-if="isHead"
                 :stats="overview.teamStats"
+            />
+            <HomeReview
+                v-if="isHead && disputedAnswers.length"
+                :answers="disputedAnswers"
+                :decisions="reviews"
+                @review="handleReview"
             />
             <HomeSections
                 :sections="overview.sections"

@@ -80,7 +80,7 @@ defineProps({
         margin: 0;
         color: $color-white;
         border-radius: $radius-2xl $radius-2xl $radius-xs $radius-2xl;
-        background: $gradient-user;
+        background: $color-action;
         box-shadow: $shadow-bubble;
         font-size: $font-size-md;
         line-height: 1.55;
@@ -122,7 +122,7 @@ defineProps({
         height: 34px;
         color: $color-white;
         border-radius: $radius-pill;
-        background: $gradient-user;
+        background: $color-action;
         animation: shield-pulse 1.8s ease-out 3;
     }
 
