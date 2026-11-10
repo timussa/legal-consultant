@@ -1,0 +1,73 @@
+@keyframes fade-up {
+    from {
+        opacity: 0;
+        transform: translateY(4px);
+    }
+
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes thread-draw {
+    to {
+        stroke-dashoffset: 0;
+    }
+}
+
+@keyframes cite-pop {
+    0% {
+        opacity: 0.3;
+        transform: scale(0.6);
+    }
+
+    60% {
+        transform: scale(1.18);
+    }
+
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+@keyframes change-flash {
+    0% {
+        background-color: $color-flash;
+    }
+
+    100% {
+        background-color: $color-amber;
+    }
+}
+
+@keyframes shield-pulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba($color-violet, 60%);
+    }
+
+    100% {
+        box-shadow: 0 0 0 14px rgba($color-violet, 0%);
+    }
+}
+
+@keyframes clause-pulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba($color-violet-bright, 45%);
+    }
+
+    70% {
+        box-shadow: 0 0 0 14px rgba($color-violet-bright, 0%);
+    }
+
+    100% {
+        box-shadow: 0 0 0 0 rgba($color-violet-bright, 0%);
+    }
+}

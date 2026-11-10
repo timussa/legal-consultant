@@ -1,0 +1,90 @@
+@mixin flex-center {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+@mixin column($gap: $indent-step * 3) {
+    display: flex;
+    flex-direction: column;
+    gap: $gap;
+}
+
+@mixin button-reset {
+    padding: 0;
+    border: none;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+}
+
+@mixin visually-hidden {
+    position: absolute;
+    overflow: hidden;
+    width: 1px;
+    height: 1px;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+}
+
+@mixin heading($size: $font-size-xl) {
+    margin: 0;
+    font-size: $size;
+    font-weight: $font-weight-extrabold;
+    letter-spacing: $letter-spacing-tight;
+}
+
+@mixin card($radius: $radius-xl) {
+    border: 1px solid $color-line;
+    border-radius: $radius;
+    background-color: $color-surface;
+}
+
+@mixin pill($background: $color-navy-tint, $color: $color-navy) {
+    display: inline-flex;
+    align-items: center;
+    color: $color;
+    border-radius: $radius-pill;
+    background: $background;
+    font-size: $font-size-xs;
+    font-weight: $font-weight-bold;
+    white-space: nowrap;
+    gap: $indent-step;
+
+    @include padding('y', 1);
+    @include padding('x', 2.5);
+}
+
+@mixin brand-band {
+    position: relative;
+    overflow: hidden;
+    color: $color-white;
+    border-radius: $radius-2xl;
+    background: $gradient-brand;
+}
+
+@mixin glass {
+    border: 1px solid rgba($color-white, 30%);
+    background: rgba($color-white, 14%);
+}
+
+@mixin gradient-border($width: 1.5px) {
+    border: $width solid transparent;
+    background:
+        linear-gradient($color-surface, $color-surface) padding-box,
+        $gradient-thread border-box;
+}
+
+@mixin soft-glows {
+    background:
+        radial-gradient(760px 420px at 100% 0%, rgba($color-violet-bright, 10%), transparent 62%),
+        radial-gradient(620px 360px at 0% 100%, rgba($color-orange-soft, 10%), transparent 62%), $color-page;
+}
+
+@mixin focus-ring {
+    &:focus-visible {
+        outline: 2px solid $color-violet;
+        outline-offset: 2px;
+    }
+}

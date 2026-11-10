@@ -1,0 +1,111 @@
+$ui-index-base: 1;
+$ui-index-overlay: 5;
+$ui-index-header: 10;
+
+$indent-step: 4px;
+
+$duration-fast: 0.15s;
+$duration: 0.25s;
+$duration-slow: 0.45s;
+$duration-step: 600ms;
+
+$ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+$ease-back-out: cubic-bezier(0.34, 1.56, 0.64, 1);
+
+$laptop: 1240px;
+$tablet: 860px;
+$mobile: 540px;
+
+$font-primary: 'Manrope', system-ui, sans-serif;
+$font-mono: ui-monospace, 'SFMono-Regular', monospace;
+
+$font-size-2xs: 11px;
+$font-size-xs: 12px;
+$font-size-sm: 13px;
+$font-size-md: 14px;
+$font-size-base: 15px;
+$font-size-lg: 16px;
+$font-size-xl: 18px;
+$font-size-2xl: 20px;
+$font-size-3xl: 24px;
+$font-size-4xl: 32px;
+
+$font-weight-regular: 400;
+$font-weight-medium: 500;
+$font-weight-semibold: 600;
+$font-weight-bold: 700;
+$font-weight-extrabold: 800;
+
+$letter-spacing-tight: -0.02em;
+
+$radius-xs: 6px;
+$radius-sm: 8px;
+$radius-md: 10px;
+$radius-lg: 12px;
+$radius-xl: 16px;
+$radius-2xl: 18px;
+$radius-3xl: 20px;
+$radius-pill: 999px;
+
+$color-white: #ffffff;
+$color-navy: #1f2a85;
+$color-indigo: #3a2fa8;
+$color-violet: #4b3bb8;
+$color-violet-bright: #7b4fd8;
+$color-orange: #f26b21;
+$color-orange-soft: #f28a4e;
+$color-on-orange: #1a0e06;
+
+$color-ink: #1a1f4d;
+$color-ink-soft: #4a4f72;
+$color-ink-muted: #6b7090;
+$color-ink-faint: #a0a4c0;
+$color-text-body: #2a3060;
+
+$color-page: #f5f6fa;
+$color-surface: #ffffff;
+$color-surface-soft: #fafafd;
+$color-surface-muted: #f0f1f7;
+$color-line: #e6e8f0;
+$color-line-soft: #f0f1f6;
+$color-line-strong: #dadce8;
+
+$color-lavender: #efedfd;
+$color-lavender-soft: #f4f2ff;
+$color-lavender-line: #d9d3fa;
+$color-navy-tint: #e8eaf8;
+$color-peach: #fde7da;
+$color-peach-soft: #fff5ee;
+$color-peach-line: #f6c7a9;
+$color-peach-ink: #9a3a0a;
+$color-peach-deep: #6e2a07;
+$color-mark: #fde3d3;
+$color-amber: #fff2cc;
+$color-amber-ink: #6b4e00;
+$color-icon-tile: #e4e8f3;
+$color-on-brand-soft: #d8d6ff;
+$color-on-brand-muted: #e2e0ff;
+$color-injected-bg: #2a1f4a;
+$color-injected-ink: #ffd9c4;
+
+$gradient-brand: linear-gradient(
+    115deg,
+    $color-navy 0%,
+    $color-indigo 48%,
+    $color-violet-bright 76%,
+    $color-orange-soft 100%
+);
+$gradient-thread: linear-gradient(115deg, $color-navy, $color-violet-bright 60%, $color-orange-soft);
+$gradient-user: linear-gradient(120deg, $color-navy, $color-violet);
+$color-peach-whisper: #fff1e8;
+$color-flash: #ffd9bf;
+
+$gradient-selected: linear-gradient(120deg, $color-lavender, $color-peach-whisper);
+
+$shadow-card: 0 18px 40px -30px rgba($color-ink, 45%);
+$shadow-raised: 0 16px 36px -22px rgba($color-violet, 60%);
+$shadow-bubble: 0 12px 26px -18px rgba($color-navy, 80%);
+$shadow-soft: 0 1px 2px rgba($color-ink, 12%);
+
+$header-height: 64px;
+$sidebar-width: 80px;
