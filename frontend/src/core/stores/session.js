@@ -1,6 +1,7 @@
 import {defineStore} from 'pinia';
 import {computed, ref} from 'vue';
 import {USER_ROLES} from '@/core/constants';
+import {useSettingsStore} from '@/core/stores/settings';
 
 export const ROLE_OPTIONS = Object.freeze([
     {value: USER_ROLES.lawyer, label: 'Юрист'},
@@ -8,7 +9,9 @@ export const ROLE_OPTIONS = Object.freeze([
 ]);
 
 export const useSessionStore = defineStore('session', () => {
-    const role = ref(USER_ROLES.lawyer);
+    const settingsStore = useSettingsStore();
+
+    const role = ref(settingsStore.settings.defaultRole);
     const user = ref({name: 'Анна Корнеева', initials: 'АК', position: 'Юрист, договорная работа'});
 
     const isHead = computed(() => role.value === USER_ROLES.head);

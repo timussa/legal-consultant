@@ -81,8 +81,8 @@ defineProps({
             box-shadow $duration ease;
         color: $color-white;
         border-radius: $radius-xl;
-        background: $color-action;
-        box-shadow: $shadow-bubble;
+        background-color: $color-cta;
+        box-shadow: 0 10px 22px -14px rgba($color-cta, 80%);
         font-size: $font-size-md;
         font-weight: $font-weight-bold;
         text-decoration: none;
@@ -92,7 +92,7 @@ defineProps({
 
         @include hover {
             transform: translateY(-1px);
-            box-shadow: $shadow-raised;
+            box-shadow: 0 14px 26px -14px rgba($color-cta, 85%);
         }
     }
 

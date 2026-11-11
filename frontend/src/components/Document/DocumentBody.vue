@@ -95,7 +95,7 @@ function handleAskFragment() {
                     >
                         <span>{{ clause.diff.prefix }}</span>
                         <del class="document-body__removed">{{ clause.diff.removed }}</del>
-                        <span>&#32;</span>
+                        {{ ' ' }}
                         <ins class="document-body__added">{{ clause.diff.added }}</ins>
                         <span>{{ clause.diff.suffix }}</span>
                     </p>
@@ -335,6 +335,7 @@ function handleAskFragment() {
             width: auto;
             text-align: left;
         }
+
     }
 }
 </style>

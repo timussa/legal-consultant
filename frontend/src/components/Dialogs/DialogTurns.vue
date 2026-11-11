@@ -78,10 +78,9 @@ defineProps({
     &__bubble {
         max-width: 78%;
         margin: 0;
-        color: $color-white;
+        color: $color-ink;
         border-radius: $radius-2xl $radius-2xl $radius-xs $radius-2xl;
-        background: $color-action;
-        box-shadow: $shadow-bubble;
+        background-color: $color-navy-tint;
         font-size: $font-size-md;
         line-height: 1.55;
 

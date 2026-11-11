@@ -1,28 +1,35 @@
-import {computed, onScopeDispose, ref, watch} from 'vue';
-import {countCitations} from '@/core/utils/answer';
+import {computed, onScopeDispose, ref, toValue, watch} from 'vue';
+import {getPartOffsets} from '@/core/utils/answer';
 
 /** @typedef {import('@/core/types/assistant').Answer} Answer */
 
 const STEP_DURATION_MS = 600;
-const CITE_DURATION_MS = 380;
+const TYPE_TICK_MS = 30;
+const CHARS_PER_TICK = 9;
 
 const shownAnswers = new WeakSet();
 
 /**
- * Проигрывает ход проверки ответа: шаги пайплайна, затем поочерёдно сноски.
+ * Проигрывает ход проверки ответа: шаги пайплайна, затем печатает текст, сноски появляются по ходу.
  * Уже показанный ответ раскрывается сразу.
  * @param {import('vue').Ref<Answer | null>} answer
+ * @param {{isStreaming?: import('vue').MaybeRefOrGetter<boolean>}} [options]
  */
-export function useAskPipeline(answer) {
+export function useAskPipeline(answer, options = {}) {
     const activeStepIndex = ref(-1);
-    const revealedCiteCount = ref(0);
+    const revealedChars = ref(0);
 
     let timerId = null;
 
     const steps = computed(() => answer.value?.steps ?? []);
-    const citeCount = computed(() => (answer.value ? countCitations(answer.value.paragraphs) : 0));
+    const offsets = computed(() => getPartOffsets(answer.value?.paragraphs ?? []));
     const isStepsDone = computed(() => activeStepIndex.value >= steps.value.length);
-    const isComplete = computed(() => isStepsDone.value && revealedCiteCount.value >= citeCount.value);
+    const isTextComplete = computed(() => revealedChars.value >= offsets.value.total);
+    const isStreamingText = computed(() => isStepsDone.value && !isTextComplete.value);
+    const isComplete = computed(() => isStepsDone.value && isTextComplete.value);
+    const revealedCiteCount = computed(() =>
+        isStepsDone.value ? offsets.value.citeOffsets.filter((offset) => offset <= revealedChars.value).length : 0,
+    );
     const progress = computed(() =>
         steps.value.length ? Math.min(1, Math.max(0, activeStepIndex.value) / steps.value.length) : 0,
     );
@@ -39,29 +46,36 @@ export function useAskPipeline(answer) {
     function finish() {
         stop();
         activeStepIndex.value = steps.value.length;
-        revealedCiteCount.value = citeCount.value;
+        revealedChars.value = offsets.value.total;
     }
 
-    function revealCites() {
+    function typeText() {
         stop();
-        timerId = setInterval(() => {
-            revealedCiteCount.value += 1;
 
-            if (revealedCiteCount.value >= citeCount.value) {
+        if (toValue(options.isStreaming) === false) {
+            revealedChars.value = offsets.value.total;
+
+            return;
+        }
+
+        timerId = setInterval(() => {
+            revealedChars.value = Math.min(offsets.value.total, revealedChars.value + CHARS_PER_TICK);
+
+            if (revealedChars.value >= offsets.value.total) {
                 stop();
             }
-        }, CITE_DURATION_MS);
+        }, TYPE_TICK_MS);
     }
 
     function runSteps() {
         stop();
         activeStepIndex.value = 0;
-        revealedCiteCount.value = 0;
+        revealedChars.value = 0;
         timerId = setInterval(() => {
             activeStepIndex.value += 1;
 
             if (activeStepIndex.value >= steps.value.length) {
-                revealCites();
+                typeText();
             }
         }, STEP_DURATION_MS);
     }
@@ -70,7 +84,7 @@ export function useAskPipeline(answer) {
         if (!answer.value) {
             stop();
             activeStepIndex.value = -1;
-            revealedCiteCount.value = 0;
+            revealedChars.value = 0;
 
             return;
         }
@@ -91,5 +105,16 @@ export function useAskPipeline(answer) {
         }
     }
 
-    return {activeStepIndex, revealedCiteCount, isStepsDone, isComplete, progress, replay, finish};
+    return {
+        activeStepIndex,
+        revealedChars,
+        revealedCiteCount,
+        isStepsDone,
+        isTextComplete,
+        isStreamingText,
+        isComplete,
+        progress,
+        replay,
+        finish,
+    };
 }

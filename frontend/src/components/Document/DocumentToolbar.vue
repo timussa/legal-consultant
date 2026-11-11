@@ -20,15 +20,13 @@ const isCompare = defineModel('isCompare', {type: Boolean, default: false});
 const changeIndex = ref(0);
 
 const editionOptions = computed(() =>
-    props.document.editions.map((edition) => ({value: edition.id, label: `${edition.label} · ${edition.date}`})),
+    props.document.editions.map((edition) => ({value: edition.id, label: edition.label, hint: edition.date})),
 );
 const edition = computed(() => props.document.editions.find((item) => item.id === editionId.value));
 const changeCount = computed(() => props.changedClauses.length);
 const isNavigationVisible = computed(() => isCompare.value && changeCount.value > 0);
 const compareTitle = computed(() =>
-    props.canCompare
-        ? 'Показать, что изменилось относительно прошлой редакции'
-        : 'Это первая редакция, сравнивать не с чем',
+    props.canCompare ? 'Показать, что изменилось относительно прошлой редакции' : 'Это первая редакция, сравнивать не с чем',
 );
 
 watch(editionId, () => {
@@ -59,7 +57,6 @@ function handleCompareClick() {
                 v-model="editionId"
                 :options="editionOptions"
                 label="Редакция документа"
-                is-on-brand
             />
             <span
                 v-if="edition?.note"
@@ -137,10 +134,12 @@ function handleCompareClick() {
     align-items: center;
     justify-content: center;
     overflow: hidden;
-    color: $color-white;
+    color: $color-ink;
+    border: 1px solid $color-lavender-line;
     border-radius: $radius-2xl;
-    background: $color-action;
-    box-shadow: $shadow-raised;
+    background-color: rgba($color-lavender-soft, 94%);
+    box-shadow: $shadow-card;
+    backdrop-filter: blur(12px);
     gap: $indent-step * 3;
 
     @include padding('y', 2);
@@ -150,6 +149,8 @@ function handleCompareClick() {
         display: flex;
         flex-wrap: wrap;
         align-items: center;
+        min-width: 0;
+        max-width: 100%;
         gap: $indent-step * 2;
     }
 
@@ -166,22 +167,23 @@ function handleCompareClick() {
         align-items: center;
         transition:
             color $duration ease,
+            border-color $duration ease,
             background-color $duration ease,
-            box-shadow $duration ease,
             transform $duration-fast $ease-out;
+        color: $color-navy;
+        border: 1px solid $color-lavender-line;
         border-radius: $radius-pill;
+        background-color: $color-surface;
         font-size: $font-size-sm;
         font-weight: $font-weight-bold;
-        backdrop-filter: blur(10px);
         gap: $indent-step * 2;
 
-        @include glass;
         @include padding('y', 2);
         @include padding('x', 3.5);
 
         &:not(:disabled) {
             @include hover {
-                background-color: rgba($color-white, 24%);
+                border-color: $color-peach-line;
             }
         }
 
@@ -191,15 +193,9 @@ function handleCompareClick() {
         }
 
         &--active {
-            color: $color-navy;
-            background-color: $color-white;
-            box-shadow: $shadow-soft;
-
-            &:not(:disabled) {
-                @include hover {
-                    background-color: $color-white;
-                }
-            }
+            color: $color-peach-ink;
+            border-color: $color-peach-line;
+            background-color: $color-peach;
         }
     }
 
@@ -219,7 +215,7 @@ function handleCompareClick() {
     }
 
     &__position {
-        color: $color-on-brand-muted;
+        color: $color-ink-soft;
         font-size: $font-size-sm;
         font-weight: $font-weight-bold;
         white-space: nowrap;
@@ -229,21 +225,22 @@ function handleCompareClick() {
 
     &__arrow {
         @include button-reset;
-        @include press;
         @include flex-center;
         @include focus-ring;
+        @include press;
 
         width: 34px;
         height: 34px;
         transition:
             background-color $duration ease,
             transform $duration-fast $ease-out;
-        color: $color-white;
+        color: $color-navy;
+        border: 1px solid $color-lavender-line;
         border-radius: $radius-md;
-        background-color: rgba($color-white, 14%);
+        background-color: $color-surface;
 
         @include hover {
-            background-color: rgba($color-white, 26%);
+            background-color: $color-lavender;
         }
     }
 

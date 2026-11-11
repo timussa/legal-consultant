@@ -3,6 +3,7 @@ export const ROUTE_NAMES = Object.freeze({
     dialogs: 'dialogs',
     document: 'document',
     verification: 'verification',
+    settings: 'settings',
 });
 
 export const ANSWER_STATUSES = Object.freeze({
@@ -42,3 +43,9 @@ export const FEEDBACK_VALUES = Object.freeze({
 export const RERANK_THRESHOLD = 0.8;
 
 export const DEFAULT_DOCUMENT_ID = 'p-17-2024';
+
+export const NOTIFICATION_KINDS = Object.freeze({
+    update: 'update',
+    outdated: 'outdated',
+    disputed: 'disputed',
+});

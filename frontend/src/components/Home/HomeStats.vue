@@ -102,7 +102,7 @@ const items = computed(() => [
 
     @include tablet {
         &__list {
-            grid-template-columns: 1fr;
+            grid-template-columns: minmax(0, 1fr);
             gap: $indent-step * 3;
         }
     }

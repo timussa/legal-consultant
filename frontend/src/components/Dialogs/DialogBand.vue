@@ -21,13 +21,11 @@ const eventDate = computed({
     set: (value) => emit('change-date', value),
 });
 const dateOptions = computed(() =>
-    (props.dialog.eventDates ?? []).map(({value, label, hint}) => ({value, label: hint ? `${label}, ${hint}` : label})),
+    (props.dialog.eventDates ?? []).map(({value, label, hint}) => ({value, label, hint})),
 );
 const hasDates = computed(() => dateOptions.value.length > 0 && Boolean(props.dialog.eventDate));
 const context = computed(() => props.dialog.answer?.context ?? []);
-const chips = computed(() =>
-    hasDates.value ? context.value.filter((item) => item.label !== EDITION_LABEL) : context.value,
-);
+const chips = computed(() => (hasDates.value ? context.value.filter((item) => item.label !== EDITION_LABEL) : context.value));
 const editionNote = computed(() => {
     if (props.isAsking) {
         return 'Подбираю редакцию документов…';
@@ -48,7 +46,6 @@ const editionNote = computed(() => {
                     v-if="dialog.answer && !isAsking"
                     :status="dialog.answer.status"
                     :label="dialog.answer.verdict"
-                    is-on-brand
                 />
             </div>
 
@@ -102,7 +99,6 @@ const editionNote = computed(() => {
                 :options="dateOptions"
                 label="Дата события"
                 :is-disabled="isAsking"
-                is-on-brand
             />
         </div>
     </header>
@@ -110,7 +106,7 @@ const editionNote = computed(() => {
 
 <style lang="scss">
 .dialog-band {
-    @include brand-band;
+    @include light-band;
     @include padding('y', 6);
     @include padding('x', 7);
 
@@ -138,7 +134,7 @@ const editionNote = computed(() => {
     }
 
     &__number {
-        color: $color-on-brand-soft;
+        color: $color-ink-muted;
         font-size: $font-size-sm;
         font-weight: $font-weight-bold;
     }
@@ -159,14 +155,11 @@ const editionNote = computed(() => {
     }
 
     &__chip {
-        backdrop-filter: blur(8px);
-
-        @include glass;
-        @include pill(rgba($color-white, 14%), $color-white);
+        @include pill($color-surface-muted, $color-ink);
     }
 
     &__chip-label {
-        color: $color-on-brand-soft;
+        color: $color-ink-muted;
         font-weight: $font-weight-semibold;
     }
 
@@ -179,12 +172,13 @@ const editionNote = computed(() => {
     }
 
     &__date-label {
-        color: $color-on-brand-soft;
+        color: $color-ink-muted;
         font-size: $font-size-xs;
         font-weight: $font-weight-bold;
     }
 
     &__date-value {
+        color: $color-navy;
         font-family: $font-document;
         font-size: $font-size-display;
         font-weight: $font-weight-regular;
@@ -211,7 +205,7 @@ const editionNote = computed(() => {
 
     &__date-edition {
         min-height: 1.5em;
-        color: $color-on-brand-muted;
+        color: $color-ink-soft;
         font-family: $font-document;
         font-size: $font-size-base;
         font-style: italic;

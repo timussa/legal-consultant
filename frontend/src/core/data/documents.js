@@ -237,9 +237,7 @@ export const DOCUMENTS = Object.freeze({
                 ],
             },
         ],
-        citations: [
-            {clauseId: '3', dialogId: '405', dialogNumber: '№405', dialogTitle: 'Ставка НДС в 2018 году', cite: 1},
-        ],
+        citations: [{clauseId: '3', dialogId: '405', dialogNumber: '№405', dialogTitle: 'Ставка НДС в 2018 году', cite: 1}],
         comments: [],
         files: ['НК РФ ст. 164 (действующая редакция).txt'],
     },

@@ -10,6 +10,7 @@ import {getChangedClauses, getPreviousEditionId} from '@/core/utils/document';
 import DocumentAside from '@/components/Document/DocumentAside.vue';
 import DocumentBand from '@/components/Document/DocumentBand.vue';
 import DocumentBody from '@/components/Document/DocumentBody.vue';
+import DocumentSkeleton from '@/components/Document/DocumentSkeleton.vue';
 import DocumentToc from '@/components/Document/DocumentToc.vue';
 import DocumentToolbar from '@/components/Document/DocumentToolbar.vue';
 import UiState from '@/components/Ui/UiState.vue';
@@ -108,11 +109,10 @@ function handleAskFragment(fragment) {
 
 <template>
     <div class="document-page">
+        <DocumentSkeleton v-if="!document && isLoading" />
         <UiState
-            v-if="!document"
-            :is-loading="isLoading"
+            v-else-if="!document"
             :error="error ?? notFoundError"
-            loading-text="Открываю документ…"
             @retry="reload"
         />
 
@@ -155,14 +155,14 @@ function handleAskFragment(fragment) {
                     @select="handleSelectSection"
                 />
                 <div class="document-page__main">
-                    <DocumentToolbar
-                        v-model:edition-id="editionId"
-                        v-model:is-compare="isCompare"
-                        :document="document"
-                        :changed-clauses="changedClauses"
-                        :can-compare="canCompare"
-                        @go-to-change="handleSelectClause"
-                    />
+                <DocumentToolbar
+                    v-model:edition-id="editionId"
+                    v-model:is-compare="isCompare"
+                    :document="document"
+                    :changed-clauses="changedClauses"
+                    :can-compare="canCompare"
+                    @go-to-change="handleSelectClause"
+                />
                     <DocumentBody
                         :document="document"
                         :edition-id="editionId"
@@ -265,7 +265,7 @@ function handleAskFragment(fragment) {
 
     @include tablet {
         &__grid {
-            grid-template-columns: 1fr;
+            grid-template-columns: minmax(0, 1fr);
         }
 
         &__toc {

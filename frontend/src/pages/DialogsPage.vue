@@ -7,11 +7,16 @@ import {useAskPipeline} from '@/core/composables/useAskPipeline';
 import {useEvidenceThread} from '@/core/composables/useEvidenceThread';
 import {ANSWER_STATUSES, ROUTE_NAMES} from '@/core/constants';
 import {useDialogsStore} from '@/core/stores/dialogs';
+import {useSessionStore} from '@/core/stores/session';
+import {useSettingsStore} from '@/core/stores/settings';
 import {useToastStore} from '@/core/stores/toast';
 import {buildReferenceNote} from '@/core/utils/answer';
+import {formatLongDate} from '@/core/utils/date';
+import {buildReferenceHtml} from '@/core/utils/referenceDocument';
 
 import DialogAnswer from '@/components/Dialogs/DialogAnswer.vue';
 import DialogBand from '@/components/Dialogs/DialogBand.vue';
+import DialogAnswerSkeleton from '@/components/Dialogs/DialogAnswerSkeleton.vue';
 import DialogComposer from '@/components/Dialogs/DialogComposer.vue';
 import DialogEmpty from '@/components/Dialogs/DialogEmpty.vue';
 import DialogList from '@/components/Dialogs/DialogList.vue';
@@ -25,6 +30,8 @@ const route = useRoute();
 const router = useRouter();
 const dialogsStore = useDialogsStore();
 const toastStore = useToastStore();
+const {settings} = storeToRefs(useSettingsStore());
+const {user} = storeToRefs(useSessionStore());
 const {dialogs, isLoading, loadError, askingDialogId, askError, feedback} = storeToRefs(dialogsStore);
 
 const workspace = ref(null);
@@ -38,10 +45,13 @@ const answer = computed(() => dialog.value?.answer ?? null);
 const isAsking = computed(() => Boolean(dialog.value) && askingDialogId.value === dialog.value.id);
 const activeCite = computed(() => hoveredCite.value ?? pinnedCite.value);
 
-const {activeStepIndex, revealedCiteCount, isStepsDone, progress, replay} = useAskPipeline(answer);
+const {activeStepIndex, revealedChars, revealedCiteCount, isStepsDone, progress, replay} = useAskPipeline(answer, {
+    isStreaming: () => settings.value.isStreaming,
+});
 const {path: threadPath, size: threadSize} = useEvidenceThread(workspace, activeCite);
 
 const isAnswerVisible = computed(() => Boolean(answer.value) && isStepsDone.value && !isAsking.value);
+const isAnswerPending = computed(() => isAsking.value || (Boolean(answer.value) && !isStepsDone.value));
 
 watch(dialogId, () => {
     hoveredCite.value = null;
@@ -141,6 +151,30 @@ async function handleFeedback(value) {
     }
 }
 
+function handleDownload() {
+    const dateLabel = dialog.value.eventDate
+        ? `Дата события: ${formatLongDate(dialog.value.eventDate)}`
+        : 'Дата события не указана';
+    const html = buildReferenceHtml({
+        number: dialog.value.number,
+        question: dialog.value.question,
+        verdict: answer.value.verdict,
+        dateLabel,
+        context: answer.value.context,
+        paragraphs: answer.value.paragraphs,
+        sources: answer.value.sources,
+        author: user.value.name,
+    });
+    const url = URL.createObjectURL(new Blob(['\ufeff', html], {type: 'application/msword'}));
+    const link = window.document.createElement('a');
+
+    link.href = url;
+    link.download = `Справка ${dialog.value.number}.doc`;
+    link.click();
+    setTimeout(() => URL.revokeObjectURL(url));
+    toastStore.show('Справка сохранена в загрузки');
+}
+
 async function handleCopy() {
     const note = buildReferenceNote(dialog.value.question, answer.value.paragraphs, answer.value.sources);
 
@@ -222,13 +256,15 @@ async function handleCopy() {
                             :total-duration-label="answer?.totalDurationLabel ?? ''"
                             :is-waiting="isAsking || !answer"
                             :is-done="isStepsDone"
+                            :keep-expanded="settings.isPipelineExpanded"
                             @replay="replay"
                         />
 
+                        <DialogAnswerSkeleton v-if="isAnswerPending" />
                         <DialogAnswer
-                            v-if="isAnswerVisible"
+                            v-else-if="isAnswerVisible"
                             :answer="answer"
-                            :revealed-cite-count="revealedCiteCount"
+                            :revealed-chars="revealedChars"
                             :active-cite="activeCite"
                             :feedback="feedback[dialog.id] ?? null"
                             @activate-cite="handleActivateCite"
@@ -238,6 +274,7 @@ async function handleCopy() {
                             @choose-option="handleChooseOption"
                             @feedback="handleFeedback"
                             @copy="handleCopy"
+                            @download="handleDownload"
                         />
 
                         <DialogTurns
@@ -353,10 +390,9 @@ async function handleCopy() {
         align-self: flex-end;
         max-width: 78%;
         margin: 0;
-        color: $color-white;
+        color: $color-ink;
         border-radius: $radius-2xl $radius-2xl $radius-xs $radius-2xl;
-        background: $color-action;
-        box-shadow: $shadow-bubble;
+        background-color: $color-navy-tint;
         font-size: $font-size-base;
         font-weight: $font-weight-medium;
         line-height: 1.55;
@@ -391,7 +427,7 @@ async function handleCopy() {
 
     @include laptop {
         &__workspace {
-            grid-template-columns: 1fr;
+            grid-template-columns: minmax(0, 1fr);
             gap: $indent-step * 5;
         }
 
@@ -404,7 +440,7 @@ async function handleCopy() {
     }
 
     @include tablet {
-        grid-template-columns: 1fr;
+        grid-template-columns: minmax(0, 1fr);
 
         &__list {
             position: static;

@@ -14,6 +14,7 @@ import HomeHero from '@/components/Home/HomeHero.vue';
 import HomeRecentAnswers from '@/components/Home/HomeRecentAnswers.vue';
 import HomeReview from '@/components/Home/HomeReview.vue';
 import HomeSections from '@/components/Home/HomeSections.vue';
+import HomeSkeleton from '@/components/Home/HomeSkeleton.vue';
 import HomeStats from '@/components/Home/HomeStats.vue';
 import HomeTeamStats from '@/components/Home/HomeTeamStats.vue';
 import HomeUpdates from '@/components/Home/HomeUpdates.vue';
@@ -70,11 +71,10 @@ function handleSectionUnavailable(section) {
             @ask="handleAsk"
         />
 
+        <HomeSkeleton v-if="!overview && isLoading" />
         <UiState
-            v-if="!overview"
-            :is-loading="isLoading"
+            v-else-if="!overview"
             :error="error"
-            loading-text="Открываю базу знаний…"
             @retry="reload"
         />
 
@@ -131,7 +131,7 @@ function handleSectionUnavailable(section) {
         gap: $indent-step * 5;
 
         &__columns {
-            grid-template-columns: 1fr;
+            grid-template-columns: minmax(0, 1fr);
         }
     }
 }

@@ -38,7 +38,7 @@ defineProps({
 
 <style lang="scss">
 .document-band {
-    @include brand-band;
+    @include light-band;
     @include padding('y', 6);
     @include padding('x', 7);
 
@@ -57,7 +57,7 @@ defineProps({
     }
 
     &__kind {
-        color: $color-on-brand-soft;
+        color: $color-ink-muted;
         font-size: $font-size-sm;
         font-weight: $font-weight-bold;
     }
@@ -78,7 +78,7 @@ defineProps({
     &__file {
         display: inline-flex;
         align-items: center;
-        color: $color-on-brand-muted;
+        color: $color-ink-soft;
         font-size: $font-size-xs;
         font-weight: $font-weight-semibold;
         gap: $indent-step;
@@ -90,12 +90,11 @@ defineProps({
         flex-shrink: 0;
         width: 148px;
         border-radius: $radius-2xl;
-        filter: drop-shadow(0 24px 30px rgba($color-ink, 35%));
-    }
+            }
 
     @include tablet {
         &__art {
-            display: none;
+            width: 88px;
         }
     }
 

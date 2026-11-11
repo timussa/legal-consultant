@@ -1,22 +1,21 @@
 <script setup>
 import {onBeforeUnmount, onMounted, ref} from 'vue';
-import {Bell, Search} from 'lucide-vue-next';
+import {Search} from 'lucide-vue-next';
 import {storeToRefs} from 'pinia';
-import {useRouter} from 'vue-router';
 import {ROUTE_NAMES} from '@/core/constants';
-import {useDialogsStore} from '@/core/stores/dialogs';
 import {ROLE_OPTIONS, useSessionStore} from '@/core/stores/session';
 
+import HeaderNotifications from '@/components/Header/HeaderNotifications.vue';
+import SearchPalette from '@/components/Search/SearchPalette.vue';
 import UiBrandMark from '@/components/Ui/UiBrandMark.vue';
 import UiSegmented from '@/components/Ui/UiSegmented.vue';
 
-const router = useRouter();
-const dialogsStore = useDialogsStore();
+const EDITABLE_TAGS = Object.freeze(['INPUT', 'TEXTAREA', 'SELECT']);
+
 const sessionStore = useSessionStore();
 const {role, user} = storeToRefs(sessionStore);
 
-const query = ref('');
-const searchInput = ref(null);
+const isSearchOpen = ref(false);
 
 onMounted(() => window.addEventListener('keydown', handleShortcut));
 
@@ -24,25 +23,13 @@ onBeforeUnmount(() => window.removeEventListener('keydown', handleShortcut));
 
 /** @param {KeyboardEvent} event */
 function handleShortcut(event) {
-    if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
+    const isEditing = EDITABLE_TAGS.includes(event.target?.tagName) || event.target?.isContentEditable;
+    const isPaletteShortcut = (event.metaKey || event.ctrlKey) && event.code === 'KeyK';
+
+    if (isPaletteShortcut || (event.key === '/' && !isEditing)) {
         event.preventDefault();
-        searchInput.value?.focus();
+        isSearchOpen.value = true;
     }
-}
-
-async function handleSearchSubmit() {
-    const question = query.value.trim();
-
-    if (!question) {
-        return;
-    }
-
-    query.value = '';
-    searchInput.value?.blur();
-
-    const dialogId = await dialogsStore.ask(question);
-
-    router.push({name: ROUTE_NAMES.dialogs, params: {dialogId}});
 }
 </script>
 
@@ -59,26 +46,20 @@ async function handleSearchSubmit() {
             </span>
         </RouterLink>
 
-        <form
+        <button
             class="the-header__search"
-            role="search"
-            @submit.prevent="handleSearchSubmit"
+            type="button"
+            aria-label="Поиск по базе знаний"
+            aria-haspopup="dialog"
+            @click="isSearchOpen = true"
         >
             <Search
                 class="the-header__search-icon"
                 :size="18"
                 aria-hidden="true"
             />
-            <input
-                ref="searchInput"
-                v-model="query"
-                class="the-header__search-input"
-                type="search"
-                placeholder="Спросите или найдите документ"
-                aria-label="Вопрос или поиск по базе"
-            />
-            <kbd class="the-header__search-key">⌘K</kbd>
-        </form>
+            <span class="the-header__search-placeholder">Найти пункт, документ или задать вопрос</span>
+        </button>
 
         <div class="the-header__actions">
             <div class="the-header__roles">
@@ -88,25 +69,21 @@ async function handleSearchSubmit() {
                     label="Роль"
                 />
             </div>
-            <button
-                class="the-header__bell"
-                type="button"
-                aria-label="Уведомления: 2 новых"
+            <HeaderNotifications />
+            <RouterLink
+                class="the-header__user"
+                :to="{name: ROUTE_NAMES.settings}"
+                aria-label="Профиль и настройки"
             >
-                <Bell
-                    :size="20"
-                    aria-hidden="true"
-                />
-                <span class="the-header__bell-dot" />
-            </button>
-            <div class="the-header__user">
                 <span class="the-header__avatar">{{ user.initials }}</span>
                 <span class="the-header__user-text">
                     <span class="the-header__user-name">{{ user.name }}</span>
                     <span class="the-header__user-position">{{ user.position }}</span>
                 </span>
-            </div>
+            </RouterLink>
         </div>
+
+        <SearchPalette v-model:open="isSearchOpen" />
     </header>
 </template>
 
@@ -152,60 +129,43 @@ async function handleSearchSubmit() {
     }
 
     &__search {
-        position: relative;
+        @include button-reset;
+        @include focus-ring;
+
         display: flex;
         flex: 1;
         align-items: center;
         min-width: 0;
         max-width: 520px;
+        height: 42px;
         transition:
             border-color $duration ease,
-            box-shadow $duration ease;
+            background-color $duration ease;
         border: 1px solid $color-line;
         border-radius: $radius-pill;
-        background: $color-surface-soft;
+        background-color: $color-surface-soft;
+        text-align: left;
         gap: $indent-step * 2;
 
         @include padding('x', 4);
 
-        &:focus-within {
+        @include hover {
             border-color: $color-lavender-line;
-            box-shadow: 0 0 0 4px rgba($color-violet-bright, 12%);
+            background-color: $color-surface;
         }
+    }
+
+    &__search-placeholder {
+        overflow: hidden;
+        color: $color-ink-faint;
+        font-size: $font-size-md;
+        text-overflow: ellipsis;
+        white-space: nowrap;
     }
 
     &__search-icon {
         flex-shrink: 0;
         color: $color-ink-faint;
-    }
-
-    &__search-input {
-        flex: 1;
-        min-width: 0;
-        height: 40px;
-        color: $color-ink;
-        border: none;
-        outline: none;
-        background: transparent;
-        font: inherit;
-        font-size: $font-size-md;
-
-        &::placeholder {
-            color: $color-ink-faint;
-        }
-    }
-
-    &__search-key {
-        color: $color-ink-muted;
-        border: 1px solid $color-line;
-        border-radius: $radius-xs;
-        background: $color-surface;
-        font-family: $font-primary;
-        font-size: $font-size-2xs;
-        font-weight: $font-weight-bold;
-
-        @include padding('y', 0.5);
-        @include padding('x', 1.5);
     }
 
     &__actions {
@@ -215,38 +175,19 @@ async function handleSearchSubmit() {
         gap: $indent-step * 4;
     }
 
-    &__bell {
-        @include button-reset;
-        @include flex-center;
+    &__user {
         @include focus-ring;
 
-        position: relative;
-        width: 40px;
-        height: 40px;
-        transition: background $duration ease;
-        color: $color-ink-soft;
-        border-radius: $radius-lg;
-
-        @include hover {
-            background: $color-surface-muted;
-        }
-    }
-
-    &__bell-dot {
-        position: absolute;
-        top: 9px;
-        right: 10px;
-        width: 8px;
-        height: 8px;
-        border: 2px solid $color-surface;
-        border-radius: $radius-pill;
-        background: $color-orange;
-    }
-
-    &__user {
         display: flex;
         align-items: center;
+        color: $color-ink;
+        border-radius: $radius-pill;
+        text-decoration: none;
         gap: $indent-step * 2.5;
+
+        @include hover {
+            color: $color-navy;
+        }
     }
 
     &__avatar {
@@ -281,8 +222,7 @@ async function handleSearchSubmit() {
         @include padding('x', 4);
 
         &__brand-text,
-        &__user-text,
-        &__search-key {
+        &__user-text {
             display: none;
         }
     }
@@ -292,9 +232,12 @@ async function handleSearchSubmit() {
 
         @include padding('x', 3);
 
-        &__roles,
-        &__bell {
+        &__roles {
             display: none;
+        }
+
+        &__actions {
+            gap: $indent-step;
         }
     }
 }

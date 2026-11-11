@@ -38,36 +38,12 @@ const text = computed(() => props.label || ANSWER_STATUS_LABELS[props.status]);
 
 <style lang="scss">
 $status-tones: (
-    confirmed: (
-        $color-navy,
-        $color-navy-tint,
-        $color-navy,
-    ),
-    refusal: (
-        $color-orange,
-        $color-peach,
-        $color-peach-ink,
-    ),
-    clarification: (
-        $color-gold,
-        $color-amber,
-        $color-amber-ink,
-    ),
-    correction: (
-        $color-violet,
-        $color-lavender,
-        $color-violet,
-    ),
-    disputed: (
-        $color-orange-soft,
-        $color-peach-soft,
-        $color-peach-deep,
-    ),
-    off-topic: (
-        $color-ink-muted,
-        $color-surface-muted,
-        $color-ink-soft,
-    ),
+    confirmed: ($color-navy, $color-navy-tint, $color-navy),
+    refusal: ($color-orange, $color-peach, $color-peach-ink),
+    clarification: ($color-gold, $color-amber, $color-amber-ink),
+    correction: ($color-violet, $color-lavender, $color-violet),
+    disputed: ($color-orange-soft, $color-peach-soft, $color-peach-deep),
+    off-topic: ($color-ink-muted, $color-surface-muted, $color-ink-soft),
 );
 
 .ui-status-pill {

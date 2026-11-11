@@ -1,34 +1,24 @@
 <script setup>
+import {BRAND_MARK} from '@/assets/images';
+
 defineProps({
     size: {type: Number, default: 40},
 });
 </script>
 
 <template>
-    <span
+    <img
         class="ui-brand-mark"
-        :style="{'--brand-mark-size': `${size}px`}"
-        aria-hidden="true"
-    >
-        §
-    </span>
+        :src="BRAND_MARK"
+        :width="size"
+        :height="size"
+        alt=""
+    />
 </template>
 
 <style lang="scss">
 .ui-brand-mark {
     flex-shrink: 0;
-    width: var(--brand-mark-size);
-    height: var(--brand-mark-size);
-    color: $color-white;
-    border-radius: calc(var(--brand-mark-size) * 0.3);
-    background: $gradient-brand;
-    box-shadow:
-        inset 0 1px 0 rgba($color-white, 35%),
-        $shadow-raised;
-    font-size: calc(var(--brand-mark-size) * 0.55);
-    font-weight: $font-weight-extrabold;
-    line-height: 1;
-
-    @include flex-center;
+    filter: drop-shadow(0 6px 10px rgba($color-indigo, 30%));
 }
 </style>

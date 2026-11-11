@@ -42,7 +42,10 @@ const model = defineModel({type: String, required: true});
     $block: &;
 
     display: inline-flex;
+    overflow-x: auto;
+    max-width: 100%;
     border-radius: $radius-pill;
+    scrollbar-width: none;
     background: $color-surface-muted;
     gap: $indent-step;
 
@@ -92,6 +95,12 @@ const model = defineModel({type: String, required: true});
         opacity: 0.7;
         font-size: $font-size-2xs;
         font-weight: $font-weight-semibold;
+    }
+
+    @include mobile {
+        &__hint {
+            display: none;
+        }
     }
 
     &--on-brand {

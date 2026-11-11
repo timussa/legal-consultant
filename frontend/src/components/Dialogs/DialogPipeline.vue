@@ -11,11 +11,12 @@ const props = defineProps({
     totalDurationLabel: {type: String, default: ''},
     isWaiting: {type: Boolean, default: false},
     isDone: {type: Boolean, default: false},
+    keepExpanded: {type: Boolean, default: false},
 });
 
 const emit = defineEmits(['replay']);
 
-const isExpanded = ref(!props.isDone);
+const isExpanded = ref(!props.isDone || props.keepExpanded);
 
 const summary = computed(() => {
     const count = props.steps.length;
@@ -26,7 +27,7 @@ const summary = computed(() => {
 watch(
     () => props.isDone,
     (isDone) => {
-        isExpanded.value = !isDone;
+        isExpanded.value = !isDone || props.keepExpanded;
     },
 );
 
@@ -316,7 +317,7 @@ function handleReplay() {
         @include padding('x', 4);
 
         &__steps {
-            grid-template-columns: 1fr;
+            grid-template-columns: minmax(0, 1fr);
         }
 
         &__replay {

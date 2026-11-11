@@ -60,3 +60,30 @@ export function getQuoteSurroundings(source) {
 
     return {before, after: /^[.,;:!?)»]/.test(after) || !after ? after : ` ${after}`};
 }
+
+/**
+ * Позиции частей ответа в общем тексте: нужны, чтобы печатать ответ по символам.
+ * Сноска занимает ноль символов и стоит там, где закончился текст перед ней.
+ * @param {AnswerPart[][]} paragraphs
+ * @returns {{starts: number[][], citeOffsets: number[], total: number}}
+ */
+export function getPartOffsets(paragraphs) {
+    let position = 0;
+
+    const citeOffsets = [];
+    const starts = paragraphs.map((paragraph) =>
+        paragraph.map((part) => {
+            const start = position;
+
+            if (part.cite === undefined) {
+                position += part.text?.length ?? 0;
+            } else {
+                citeOffsets.push(start);
+            }
+
+            return start;
+        }),
+    );
+
+    return {starts, citeOffsets, total: position};
+}

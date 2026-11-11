@@ -59,13 +59,13 @@ defineProps({
         @include sheen;
 
         color: $color-white;
-        background: $color-action;
-        box-shadow: $shadow-bubble;
+        background-color: $color-cta;
+        box-shadow: 0 10px 22px -14px rgba($color-cta, 80%);
 
         &:not(:disabled) {
             @include hover {
                 transform: translateY(-1px);
-                box-shadow: $shadow-raised;
+                box-shadow: 0 14px 26px -14px rgba($color-cta, 85%);
             }
         }
     }

@@ -6,7 +6,7 @@ import {useAskPipeline} from '@/core/composables/useAskPipeline';
 function makeAnswer() {
     return {
         steps: [{title: 'Поиск'}, {title: 'Проверка'}],
-        paragraphs: [[{text: 'Вывод'}, {cite: 1}, {cite: 2}]],
+        paragraphs: [[{text: 'Вывод по договору'}, {cite: 1}, {text: ' и по регламенту'}, {cite: 2}]],
         sources: [],
     };
 }
@@ -20,7 +20,7 @@ describe('useAskPipeline', () => {
         vi.useRealTimers();
     });
 
-    it('проходит шаги, затем раскрывает сноски', () => {
+    it('проходит шаги, затем печатает текст, и сноски появляются по ходу', () => {
         const scope = effectScope();
         const pipeline = scope.run(() => useAskPipeline(ref(makeAnswer())));
 
@@ -30,8 +30,22 @@ describe('useAskPipeline', () => {
         expect(pipeline.isStepsDone.value).toBe(true);
         expect(pipeline.revealedCiteCount.value).toBe(0);
 
-        vi.advanceTimersByTime(760);
+        vi.advanceTimersByTime(60);
+        expect(pipeline.revealedCiteCount.value).toBe(1);
+        expect(pipeline.isTextComplete.value).toBe(false);
+
+        vi.advanceTimersByTime(90);
         expect(pipeline.revealedCiteCount.value).toBe(2);
+        expect(pipeline.isComplete.value).toBe(true);
+
+        scope.stop();
+    });
+
+    it('без потоковой печати показывает текст сразу после шагов', () => {
+        const scope = effectScope();
+        const pipeline = scope.run(() => useAskPipeline(ref(makeAnswer()), {isStreaming: false}));
+
+        vi.advanceTimersByTime(1200);
         expect(pipeline.isComplete.value).toBe(true);
 
         scope.stop();

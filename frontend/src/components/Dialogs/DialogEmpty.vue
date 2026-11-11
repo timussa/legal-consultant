@@ -123,12 +123,12 @@ const emit = defineEmits(['ask']);
         transition:
             color $duration ease,
             transform $duration $ease-out;
-        color: $color-ink-faint;
+        color: $color-ink-decor;
     }
 
     @include tablet {
         &__starters {
-            grid-template-columns: 1fr;
+            grid-template-columns: minmax(0, 1fr);
         }
     }
 }

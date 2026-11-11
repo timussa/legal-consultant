@@ -1,3 +1,4 @@
+import brandMark from '@/assets/images/brand-mark.svg';
 import brandParagraph from '@/assets/images/brand-paragraph.png';
 import sectionContracts from '@/assets/images/section-contracts.png';
 import sectionInternal from '@/assets/images/section-internal.png';
@@ -10,6 +11,8 @@ import statTime from '@/assets/images/stat-time.png';
 import statVerified from '@/assets/images/stat-verified.png';
 
 export const BRAND_IMAGE = brandParagraph;
+
+export const BRAND_MARK = brandMark;
 
 export const SECTION_IMAGES = Object.freeze({
     contracts: sectionContracts,

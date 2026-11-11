@@ -65,6 +65,16 @@
     box-shadow: $shadow-raised;
 }
 
+@mixin light-band {
+    position: relative;
+    overflow: hidden;
+    color: $color-ink;
+    border: 1px solid $color-line;
+    border-radius: $radius-2xl;
+    background-color: $color-surface;
+    box-shadow: $shadow-card;
+}
+
 @mixin glass {
     border: 1px solid rgba($color-white, 30%);
     background: rgba($color-white, 14%);
@@ -74,6 +84,7 @@
     border: $width solid $color-lavender-line;
     background-color: $color-surface;
 }
+
 
 @mixin focus-ring {
     &:focus-visible {

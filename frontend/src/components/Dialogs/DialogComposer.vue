@@ -132,7 +132,7 @@ function handleKeydown(event) {
             transform $duration-fast $ease-out;
         color: $color-white;
         border-radius: $radius-lg;
-        background: $color-action;
+        background-color: $color-cta;
         font-weight: $font-weight-bold;
         gap: $indent-step * 2;
 

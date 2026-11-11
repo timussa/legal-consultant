@@ -50,10 +50,14 @@ function isActive(item) {
             <span class="the-sidebar__label">{{ item.label }}</span>
         </RouterLink>
 
-        <button
-            class="the-sidebar__item the-sidebar__item--bottom"
-            type="button"
-            aria-label="Настройки"
+        <RouterLink
+            :to="{name: ROUTE_NAMES.settings}"
+            :class="[
+                'the-sidebar__item',
+                'the-sidebar__item--bottom',
+                {'the-sidebar__item--active': route.name === ROUTE_NAMES.settings},
+            ]"
+            :aria-current="route.name === ROUTE_NAMES.settings ? 'page' : undefined"
         >
             <span class="the-sidebar__icon">
                 <Settings
@@ -63,7 +67,7 @@ function isActive(item) {
                 />
             </span>
             <span class="the-sidebar__label">Настройки</span>
-        </button>
+        </RouterLink>
     </nav>
 </template>
 
@@ -112,8 +116,7 @@ function isActive(item) {
             color: $color-navy;
 
             #{$block}__icon {
-                color: $color-white;
-                box-shadow: $shadow-bubble;
+                color: $color-navy;
 
                 &::before {
                     opacity: 1;
@@ -145,7 +148,7 @@ function isActive(item) {
             transition: opacity $duration ease;
             opacity: 0;
             border-radius: inherit;
-            background: $color-action;
+            background-color: $color-lavender;
             content: '';
             inset: 0;
         }
@@ -173,7 +176,7 @@ function isActive(item) {
         @include padding('y', 1.5);
 
         &__item--bottom {
-            display: none;
+            margin-top: 0;
         }
     }
 }

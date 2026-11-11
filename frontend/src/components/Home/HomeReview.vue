@@ -21,9 +21,7 @@ const DECISION_LABELS = Object.freeze({
     <section class="home-review">
         <div class="home-review__head">
             <h2 class="home-review__title">На проверку</h2>
-            <p class="home-review__caption">
-                Юристы отметили эти ответы как спорные. Проверьте основания и примите решение.
-            </p>
+            <p class="home-review__caption">Юристы отметили эти ответы как спорные. Проверьте основания и примите решение.</p>
         </div>
 
         <ul class="home-review__list">
@@ -40,9 +38,7 @@ const DECISION_LABELS = Object.freeze({
                         {{ answer.number }} {{ answer.question }}
                     </RouterLink>
                     <span class="home-review__preview">{{ answer.preview }}</span>
-                    <span class="home-review__meta">
-                        {{ answer.author }}, {{ answer.documentLabel }}, {{ answer.dateLabel }}
-                    </span>
+                    <span class="home-review__meta">{{ answer.author }}, {{ answer.documentLabel }}, {{ answer.dateLabel }}</span>
                 </div>
 
                 <span
@@ -199,11 +195,11 @@ const DECISION_LABELS = Object.freeze({
         &--approve {
             color: $color-white;
             border-color: transparent;
-            background-color: $color-action;
+            background-color: $color-cta;
 
             @include hover {
                 border-color: transparent;
-                background-color: $color-action-hover;
+                background-color: $color-cta-hover;
             }
         }
     }

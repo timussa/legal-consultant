@@ -5,10 +5,11 @@ const MOCK_LATENCY_MS = 350;
 /**
  * @template T
  * @param {T} value
+ * @param {number} [latency]
  * @returns {Promise<T>}
  */
-export function resolveMock(value) {
+export function resolveMock(value, latency = MOCK_LATENCY_MS) {
     return new Promise((resolve) => {
-        setTimeout(() => resolve(structuredClone(value)), MOCK_LATENCY_MS);
+        setTimeout(() => resolve(structuredClone(value)), latency);
     });
 }

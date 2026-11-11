@@ -4,6 +4,7 @@ import {
     ArrowRight,
     CalendarClock,
     Copy,
+    FileDown,
     FilePlus2,
     FileSearch,
     Flag,
@@ -12,6 +13,7 @@ import {
     ThumbsUp,
 } from 'lucide-vue-next';
 import {ANSWER_STATUSES, FEEDBACK_VALUES} from '@/core/constants';
+import {getPartOffsets} from '@/core/utils/answer';
 
 import UiCiteBadge from '@/components/Ui/UiCiteBadge.vue';
 
@@ -24,7 +26,7 @@ const FEEDBACK_OPTIONS = Object.freeze([
 const props = defineProps({
     /** @type {import('vue').PropType<import('@/core/types/assistant').Answer>} */
     answer: {type: Object, required: true},
-    revealedCiteCount: {type: Number, default: 0},
+    revealedChars: {type: Number, default: Number.MAX_SAFE_INTEGER},
     activeCite: {type: Number, default: null},
     feedback: {type: String, default: null},
 });
@@ -37,32 +39,50 @@ const emit = defineEmits([
     'choose-option',
     'feedback',
     'copy',
+    'download',
 ]);
 
 const isRefusal = computed(() => props.answer.status === ANSWER_STATUSES.refusal);
 const isClarification = computed(() => props.answer.status === ANSWER_STATUSES.clarification);
-const citeOrder = computed(() => {
-    const order = {};
-    let position = 0;
+const offsets = computed(() => getPartOffsets(props.answer.paragraphs));
+const isTextComplete = computed(() => props.revealedChars >= offsets.value.total);
+const cursorParagraph = computed(() => {
+    const starts = offsets.value.starts.map((paragraph) => paragraph[0] ?? 0);
 
-    props.answer.paragraphs.forEach((paragraph, paragraphIndex) => {
-        paragraph.forEach((part, partIndex) => {
-            if (part.cite !== undefined) {
-                order[`${paragraphIndex}-${partIndex}`] = position;
-                position += 1;
-            }
-        });
-    });
-
-    return order;
+    return starts.findLastIndex((start) => start <= props.revealedChars);
 });
 
 /**
  * @param {number} paragraphIndex
  * @param {number} partIndex
  */
+function getStart(paragraphIndex, partIndex) {
+    return offsets.value.starts[paragraphIndex][partIndex];
+}
+
+/**
+ * @param {number} paragraphIndex
+ * @param {number} partIndex
+ */
 function isCiteRevealed(paragraphIndex, partIndex) {
-    return citeOrder.value[`${paragraphIndex}-${partIndex}`] < props.revealedCiteCount;
+    return getStart(paragraphIndex, partIndex) <= props.revealedChars;
+}
+
+/**
+ * @param {import('@/core/types/assistant').AnswerPart} part
+ * @param {number} paragraphIndex
+ * @param {number} partIndex
+ * @returns {string}
+ */
+function getVisibleText(part, paragraphIndex, partIndex) {
+    const length = props.revealedChars - getStart(paragraphIndex, partIndex);
+
+    return length > 0 ? part.text.slice(0, length) : '';
+}
+
+/** @param {number} paragraphIndex */
+function isParagraphStarted(paragraphIndex) {
+    return paragraphIndex <= cursorParagraph.value;
 }
 </script>
 
@@ -102,42 +122,61 @@ function isCiteRevealed(paragraphIndex, partIndex) {
             <span class="dialog-answer__verdict">{{ answer.verdict }}</span>
         </div>
 
-        <div class="dialog-answer__text">
-            <p
+        <div
+            class="dialog-answer__text"
+            :aria-busy="!isTextComplete"
+        >
+            <template
                 v-for="(paragraph, paragraphIndex) in answer.paragraphs"
                 :key="paragraphIndex"
-                class="dialog-answer__paragraph"
             >
-                <template
-                    v-for="(part, partIndex) in paragraph"
-                    :key="partIndex"
+                <p
+                    v-if="isParagraphStarted(paragraphIndex)"
+                    class="dialog-answer__paragraph"
                 >
-                    <UiCiteBadge
-                        v-if="part.cite !== undefined"
-                        :number="part.cite"
-                        :is-active="activeCite === part.cite"
-                        :is-revealed="isCiteRevealed(paragraphIndex, partIndex)"
-                        @activate="emit('activate-cite', $event)"
-                        @deactivate="emit('deactivate-cite', $event)"
-                        @select="emit('select-cite', $event)"
+                    <template
+                        v-for="(part, partIndex) in paragraph"
+                        :key="partIndex"
+                    >
+                        <UiCiteBadge
+                            v-if="part.cite !== undefined"
+                            :number="part.cite"
+                            :is-active="activeCite === part.cite"
+                            :is-revealed="isCiteRevealed(paragraphIndex, partIndex)"
+                            @activate="emit('activate-cite', $event)"
+                            @deactivate="emit('deactivate-cite', $event)"
+                            @select="emit('select-cite', $event)"
+                        />
+                        <template v-else-if="getVisibleText(part, paragraphIndex, partIndex)">
+                            <mark
+                                v-if="part.isChanged"
+                                :class="['dialog-answer__changed', {'dialog-answer__changed--bold': part.isBold}]"
+                                title="Зависит от даты события"
+                            >
+                                {{ getVisibleText(part, paragraphIndex, partIndex) }}
+                            </mark>
+                            <strong
+                                v-else-if="part.isBold"
+                                class="dialog-answer__bold"
+                            >
+                                {{ getVisibleText(part, paragraphIndex, partIndex) }}
+                            </strong>
+                            <template v-else>{{ getVisibleText(part, paragraphIndex, partIndex) }}</template>
+                        </template>
+                    </template>
+                    <span
+                        v-if="!isTextComplete && paragraphIndex === cursorParagraph"
+                        class="dialog-answer__caret"
+                        aria-hidden="true"
                     />
-                    <mark
-                        v-else-if="part.isChanged"
-                        :class="['dialog-answer__changed', {'dialog-answer__changed--bold': part.isBold}]"
-                        title="Зависит от даты события"
-                    >
-                        {{ part.text }}
-                    </mark>
-                    <strong
-                        v-else-if="part.isBold"
-                        class="dialog-answer__bold"
-                    >
-                        {{ part.text }}
-                    </strong>
-                    <template v-else>{{ part.text }}</template>
-                </template>
-            </p>
+                </p>
+            </template>
         </div>
+
+        <div
+            v-if="isTextComplete"
+            class="dialog-answer__details"
+        >
 
         <div
             v-if="answer.missingInfo?.length"
@@ -240,6 +279,18 @@ function isCiteRevealed(paragraphIndex, partIndex) {
                     {{ option.label }}
                 </button>
             </div>
+            <div class="dialog-answer__exports">
+            <button
+                class="dialog-answer__copy"
+                type="button"
+                @click="emit('download')"
+            >
+                <FileDown
+                    :size="15"
+                    aria-hidden="true"
+                />
+                Справка в Word
+            </button>
             <button
                 class="dialog-answer__copy"
                 type="button"
@@ -249,8 +300,9 @@ function isCiteRevealed(paragraphIndex, partIndex) {
                     :size="15"
                     aria-hidden="true"
                 />
-                Скопировать справку
+                Скопировать
             </button>
+            </div>
         </footer>
 
         <div
@@ -266,6 +318,7 @@ function isCiteRevealed(paragraphIndex, partIndex) {
             >
                 {{ followUp }}
             </button>
+        </div>
         </div>
     </article>
 </template>
@@ -348,6 +401,29 @@ function isCiteRevealed(paragraphIndex, partIndex) {
 
     &__text {
         @include column($indent-step * 3);
+    }
+
+    &__details {
+        animation: fade-up $duration-slow $ease-out both;
+
+        @include column($indent-step * 4);
+    }
+
+    &__caret {
+        display: inline-block;
+        width: 2px;
+        height: 1.1em;
+        vertical-align: -0.15em;
+        background-color: $color-violet;
+        animation: caret-blink 0.9s steps(1) infinite;
+
+        @include margin('left', 0.5);
+    }
+
+    &__exports {
+        display: flex;
+        flex-wrap: wrap;
+        gap: $indent-step * 2;
     }
 
     &__paragraph {

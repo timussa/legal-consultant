@@ -25,6 +25,11 @@ export const router = createRouter({
             name: ROUTE_NAMES.verification,
             component: () => import('@/pages/VerificationPage.vue'),
         },
+        {
+            path: '/settings',
+            name: ROUTE_NAMES.settings,
+            component: () => import('@/pages/SettingsPage.vue'),
+        },
         {path: '/:pathMatch(.*)*', redirect: {name: ROUTE_NAMES.home}},
     ],
 });

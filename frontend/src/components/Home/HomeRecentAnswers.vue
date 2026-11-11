@@ -197,7 +197,7 @@ function getTarget(answer) {
         transition:
             color $duration ease,
             transform $duration $ease-out;
-        color: $color-ink-faint;
+        color: $color-ink-decor;
     }
 
     @include mobile {

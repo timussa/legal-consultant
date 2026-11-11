@@ -1,6 +1,8 @@
 $ui-index-base: 1;
 $ui-index-overlay: 5;
 $ui-index-header: 10;
+$ui-index-popover: 20;
+$ui-index-modal: 30;
 
 $indent-step: 4px;
 
@@ -62,8 +64,9 @@ $color-on-orange: #1a0e06;
 
 $color-ink: #1a1f4d;
 $color-ink-soft: #4a4f72;
-$color-ink-muted: #6b7090;
-$color-ink-faint: #a0a4c0;
+$color-ink-muted: #5d6280;
+$color-ink-faint: #696e8f;
+$color-ink-decor: #a0a4c0;
 $color-text-body: #2a3060;
 
 $color-page: #f5f6fa;
@@ -96,20 +99,16 @@ $color-on-brand-muted: #e2e0ff;
 $color-injected-bg: #2a1f4a;
 $color-injected-ink: #ffd9c4;
 
-$gradient-brand: linear-gradient(
-    115deg,
-    $color-navy 0%,
-    $color-indigo 48%,
-    $color-violet-bright 76%,
-    $color-orange-soft 100%
-);
 $color-action: $color-navy;
+$color-cta: #e0560f;
+$color-cta-hover: #c94a0c;
 $color-action-hover: $color-indigo;
 $color-selected: $color-lavender-soft;
 
 $gradient-thread: linear-gradient(115deg, $color-navy, $color-violet-bright 60%, $color-orange-soft);
 $color-peach-whisper: #fff1e8;
 $color-flash: #ffd9bf;
+
 
 $shadow-card: 0 18px 40px -30px rgba($color-ink, 45%);
 $shadow-raised: 0 16px 36px -22px rgba($color-violet, 60%);

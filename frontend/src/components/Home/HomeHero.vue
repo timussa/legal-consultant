@@ -119,6 +119,7 @@ function handleExampleClick(example) {
     @include padding('y', 9);
     @include padding('x', 10);
 
+
     &__content {
         position: relative;
         z-index: $ui-index-base;
@@ -206,7 +207,7 @@ function handleExampleClick(example) {
             opacity $duration ease;
         color: $color-white;
         border-radius: $radius-lg;
-        background: $color-action;
+        background-color: $color-cta;
         font-weight: $font-weight-bold;
         gap: $indent-step * 2;
 
@@ -267,18 +268,41 @@ function handleExampleClick(example) {
     }
 
     @include tablet {
-        grid-template-columns: 1fr;
+        grid-template-columns: minmax(0, 1fr);
 
         @include padding('y', 7);
         @include padding('x', 6);
 
         &__art {
-            display: none;
+            position: absolute;
+            top: $indent-step * 4;
+            right: $indent-step * 4;
+            width: 96px;
+            opacity: 0.9;
+        }
+
+        &__content {
+            position: static;
+        }
+
+        &__greeting,
+        &__title {
+            position: relative;
+            max-width: calc(100% - 100px);
         }
     }
 
     @include mobile {
         border-radius: $radius-2xl;
+
+        &__art {
+            width: 72px;
+        }
+
+        &__greeting,
+        &__title {
+            max-width: calc(100% - 76px);
+        }
 
         @include padding('y', 6);
         @include padding('x', 4);

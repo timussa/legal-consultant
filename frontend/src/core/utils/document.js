@@ -34,8 +34,7 @@ export function diffText(before, after) {
 
     const wordStart = before.lastIndexOf(' ', start - 1) + 1;
     const nextSpace = after.indexOf(' ', endAfter);
-    const wordTail =
-        endAfter > 0 && after[endAfter - 1] !== ' ' ? (nextSpace === -1 ? after.length : nextSpace) - endAfter : 0;
+    const wordTail = endAfter > 0 && after[endAfter - 1] !== ' ' ? (nextSpace === -1 ? after.length : nextSpace) - endAfter : 0;
 
     endAfter += wordTail;
     endBefore += wordTail;

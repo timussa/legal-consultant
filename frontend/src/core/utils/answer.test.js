@@ -4,6 +4,7 @@ import {
     buildThreadPath,
     countCitations,
     getAnswerText,
+    getPartOffsets,
     getQuoteSurroundings,
 } from '@/core/utils/answer';
 
@@ -46,6 +47,17 @@ describe('answer utils', () => {
         expect(getQuoteSurroundings({before: '', after: 'до подписания.'})).toEqual({
             before: '',
             after: ' до подписания.',
+        });
+    });
+
+    it('считает позиции частей для печати ответа', () => {
+        expect(getPartOffsets(PARAGRAPHS)).toEqual({
+            starts: [
+                [0, 9, 13, 13],
+                [14, 24, 24],
+            ],
+            citeOffsets: [13, 24],
+            total: 25,
         });
     });
 });
