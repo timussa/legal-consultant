@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import json
-
 import re
 from pathlib import Path
 from typing import Any
@@ -10,6 +9,7 @@ from src.config import (
     RAW_DIR,
     DOCS_FILE,
     CHUNKS_FILE,
+    CHUNK_MAX_CHARS,
     CHUNK_OVERLAP_SENTENCES,
 )
 
@@ -76,10 +76,10 @@ FOOTER_MARKERS = (
     "арендатор:", "источник:", "url:",
 )
 
-CHUNK_MAX_CONTRACT = 500
-CHUNK_MAX_LAW = 1500
-CHUNK_MAX_OTHER = 1200
+MIN_CHUNK_CHARS = 20
 
+
+# ---------- утилиты ----------
 
 def to_iso_date(text: str | None) -> str | None:
     if not text:
@@ -109,6 +109,19 @@ def normalize_ws(text: str) -> str:
 def is_meta_paragraph(text: str) -> bool:
     return bool(META_MARKER_RE.match(text.strip()))
 
+
+def split_into_sentences(text: str) -> list[str]:
+    return [s.strip() for s in SENTENCE_SPLIT_RE.split(text) if s.strip()]
+
+
+def take_tail_sentences(text: str, n: int) -> str:
+    if n <= 0:
+        return ""
+    sentences = split_into_sentences(text)
+    return " ".join(sentences[-n:]) if sentences else ""
+
+
+# ---------- метаданные ----------
 
 def _detect_code(filename: str, header: str) -> tuple[str | None, str | None]:
     fn = filename.lower()
@@ -160,7 +173,7 @@ def extract_metadata(text: str, filename: str) -> dict[str, Any]:
         return meta
 
     addendum_match = re.search(
-        r"(ДОПОЛНИТЕЛЬНОЕ\s+СОГЛАШЕНИЕ)\s*(?:№\s*)?([\w\-/]+)?\s*к\s*договору(?:\s+\w+)?\s*№\s*([\w\-/]+)",
+        r"(ДОПОЛНИТЕЛЬНОЕ\s+СОГЛАШЕНИЕ)\s*(?:№\s*)?([\w\-/]+)?\s*к\s+договору(?:\s+\w+)?\s*№\s*([\w\-/]+)",
         header, re.IGNORECASE,
     )
     if addendum_match:
@@ -213,7 +226,12 @@ def extract_metadata(text: str, filename: str) -> dict[str, Any]:
 
     if "СЛУЖЕБНАЯ ЗАПИСКА" in header or "Исх. №" in header:
         meta["doc_type"] = "memo"
-        meta["title"] = "Служебная записка / Письмо"
+        if "комплаенс" in header.lower():
+            meta["title"] = "Письмо комплаенс-службы"
+        elif "служебная записка" in header.lower():
+            meta["title"] = "Служебная записка"
+        else:
+            meta["title"] = "Служебная записка / Письмо"
         d = re.search(
             r"от\s+(\d{1,2}(?:\.\d{1,2}\.\d{4}|\s+[а-яё]+\s+\d{4}\s*г?\.?))",
             header,
@@ -233,6 +251,8 @@ def _link_parent_docs(docs: list[dict[str, Any]]) -> None:
         if d["doc_type"] == "addendum" and d.get("parent_doc_id"):
             d["parent_doc_id"] = by_number.get(d["parent_doc_id"], d["parent_doc_id"])
 
+
+# ---------- anchor ----------
 
 def extract_anchor_from_part(part: str, doc_type: str = "contract") -> str:
     head = part.lstrip()
@@ -260,6 +280,7 @@ def extract_anchor_from_part(part: str, doc_type: str = "contract") -> str:
 
 
 def extract_anchor_from_chunk(parts: list[str], doc_type: str = "contract") -> str:
+    """Anchor — из первого НЕ-мета абзаца."""
     for p in parts:
         if is_meta_paragraph(p):
             continue
@@ -269,16 +290,46 @@ def extract_anchor_from_chunk(parts: list[str], doc_type: str = "contract") -> s
     return ""
 
 
-def split_into_sentences(text: str) -> list[str]:
-    return [s.strip() for s in SENTENCE_SPLIT_RE.split(text) if s.strip()]
+# ---------- oversized ----------
+
+def _split_oversized(text: str, max_chars: int) -> list[str]:
+    if len(text) <= max_chars:
+        return [text]
+
+    pieces = re.split(r"(?<=[;—])\s+", text)
+    result: list[str] = []
+    current = ""
+
+    for p in pieces:
+        if len(current) + len(p) + 1 <= max_chars:
+            current = (current + " " + p) if current else p
+            continue
+
+        if current:
+            result.append(current)
+            current = ""
+
+        if len(p) > max_chars:
+            words = p.split()
+            cur2 = ""
+            for w in words:
+                if len(cur2) + len(w) + 1 <= max_chars:
+                    cur2 = (cur2 + " " + w) if cur2 else w
+                else:
+                    if cur2:
+                        result.append(cur2)
+                    cur2 = w
+            if cur2:
+                current = cur2
+        else:
+            current = p
+
+    if current:
+        result.append(current)
+    return result
 
 
-def take_tail_sentences(text: str, n: int) -> str:
-    if n <= 0:
-        return ""
-    sentences = split_into_sentences(text)
-    return " ".join(sentences[-n:]) if sentences else ""
-
+# ---------- сборка чанков ----------
 
 def _classify_chunk_type(text: str, idx: int, total: int) -> str:
     if is_meta_paragraph(text):
@@ -291,20 +342,8 @@ def _classify_chunk_type(text: str, idx: int, total: int) -> str:
     return "body"
 
 
-def _max_chars(doc_type: str) -> int:
-    if doc_type in ("contract", "addendum"):
-        return CHUNK_MAX_CONTRACT
-    if doc_type == "law":
-        return CHUNK_MAX_LAW
-    return CHUNK_MAX_OTHER
-
-
 def _split_points(text: str, doc_type: str) -> list[str]:
-    if doc_type == "law":
-        pattern = LAW_POINT_START_RE
-    else:
-        pattern = POINT_START_RE
-
+    pattern = LAW_POINT_START_RE if doc_type == "law" else POINT_START_RE
     starts = [m.start() for m in pattern.finditer(text)]
 
     if not starts:
@@ -325,77 +364,142 @@ def split_into_chunks(text: str, meta: dict[str, Any]) -> list[dict[str, Any]]:
         return []
 
     doc_type = meta["doc_type"]
-    max_chars = _max_chars(doc_type)
+    max_chars = CHUNK_MAX_CHARS
     parts = _split_points(text, doc_type)
 
     chunks: list[dict[str, Any]] = []
-    buffer = ""
-    buffer_parts: list[str] = []
 
-    def flush():
-        nonlocal buffer, buffer_parts
-        if not buffer.strip():
+    def _emit_single(chunk_text: str, anchor: str, ctype: str = "body") -> None:
+        chunk_text = chunk_text.strip()
+        if len(chunk_text) < MIN_CHUNK_CHARS:
             return
-        anchor = (
-            extract_anchor_from_chunk(buffer_parts, doc_type)
-            or extract_anchor_from_part(buffer, doc_type)
-        )
+        # Жёсткая страховка: hard cut (последний бастион).
+        if len(chunk_text) > max_chars:
+            chunk_text = chunk_text[:max_chars].rstrip()
         chunk_idx = len(chunks) + 1
         chunk_id = f"{meta['doc_id']}::p{anchor or 'hdr'}_{chunk_idx}"
         chunks.append({
             "chunk_id": chunk_id,
             "doc_id": meta["doc_id"],
             "anchor": anchor,
-            "text": buffer.strip(),
-            "contains_injection": has_injection(buffer),
-            "meta": meta,
+            "text": chunk_text,
+            "contains_injection": has_injection(chunk_text),
+            "chunk_type": ctype,
         })
-        buffer = ""
-        buffer_parts = []
 
-    for part in parts:
-        if len(part) > max_chars:
-            if buffer:
-                flush()
-            sentences = split_into_sentences(part)
-            current = ""
-            for s in sentences:
-                if len(current) + len(s) + 1 <= max_chars:
-                    current = (current + " " + s) if current else s
+    def _emit_with_split(
+        chunk_text: str,
+        anchor: str,
+        ctype: str = "body",
+        overlap: bool = False,
+    ) -> None:
+        chunk_text = chunk_text.strip()
+        if not chunk_text:
+            return
+        if len(chunk_text) <= max_chars:
+            _emit_single(chunk_text, anchor, ctype)
+            return
+        sentences = split_into_sentences(chunk_text)
+        current = ""
+        for s in sentences:
+            subs = _split_oversized(s, max_chars) if len(s) > max_chars else [s]
+            for sp in subs:
+                if len(current) + len(sp) + 1 <= max_chars:
+                    current = (current + " " + sp) if current else sp
                 else:
                     if current:
-                        buffer, buffer_parts = current, [current]
-                        flush()
-                    current = s
-            if current:
-                buffer, buffer_parts = current, [current]
+                        _emit_single(current, anchor, ctype)
+                        if overlap:
+                            ov = take_tail_sentences(current, CHUNK_OVERLAP_SENTENCES)
+                            current = (ov + " " + sp) if ov else sp
+                        else:
+                            current = sp
+                    else:
+                        # sp сам > max_chars — hard cut
+                        while len(sp) > max_chars:
+                            _emit_single(sp[:max_chars], anchor, ctype)
+                            sp = sp[max_chars:]
+                        current = sp
+        if current:
+            _emit_single(current, anchor, ctype)
+
+    # buffer / мета-абзацы
+    buffer = ""
+    buffer_parts: list[str] = []
+    buffer_anchor = ""
+
+    def flush_buffer() -> None:
+        nonlocal buffer, buffer_parts, buffer_anchor
+        if buffer.strip():
+            _emit_with_split(buffer, buffer_anchor, "body")
+        buffer = ""
+        buffer_parts = []
+        buffer_anchor = ""
+
+    for part in parts:
+        # 1. Мета-абзац — отдельный чанк.
+        if is_meta_paragraph(part):
+            flush_buffer()
+            _emit_with_split(part, "", "meta")
             continue
 
+        part_anchor = extract_anchor_from_part(part, doc_type)
+
+        # 2. part > max_chars — режем через _emit_with_split (с overlap внутри part).
+        if len(part) > max_chars:
+            flush_buffer()
+            _emit_with_split(part, part_anchor, "body", overlap=True)
+            continue
+
+        # 3. Новый пункт — flush предыдущего.
         is_new_item = bool(
             re.match(r"^\d+(?:\.\d+)*[\.\)]", part)
             or re.match(r"^[а-яё]\)", part)
         )
         if is_new_item and buffer:
-            flush()
+            flush_buffer()
+
+        # 4. Копим.
+        if not buffer:
+            buffer_anchor = part_anchor
 
         if len(buffer) + len(part) + 1 <= max_chars:
             buffer = (buffer + "\n" + part) if buffer else part
             buffer_parts.append(part)
             continue
 
-        flush()
-        overlap = take_tail_sentences(chunks[-1]["text"], CHUNK_OVERLAP_SENTENCES) if chunks else ""
-        buffer = (overlap + "\n" + part) if overlap else part
-        buffer_parts = [part]
+        # 5. Не влезает — flush и начинаем заново (с overlap, если тот же anchor).
+        prev_anchor = buffer_anchor
+        prev_text = buffer
+        flush_buffer()
+        if prev_anchor == part_anchor and prev_text:
+            ov = take_tail_sentences(prev_text, CHUNK_OVERLAP_SENTENCES)
+            buffer = (ov + "\n" + part) if ov else part
+        else:
+            buffer = part
+        # buffer мог получиться > max_chars (ov + part) — отдадим в _emit_with_split
+        if len(buffer) > max_chars:
+            _emit_with_split(buffer, part_anchor, "body", overlap=True)
+            buffer = ""
+            buffer_parts = []
+            buffer_anchor = ""
+        else:
+            buffer_parts = [part]
+            buffer_anchor = part_anchor
 
-    flush()
+    flush_buffer()
 
+    # 6. Проставить chunk_type для header/footer (meta уже проставлен).
     total = len(chunks)
     for i, c in enumerate(chunks):
+        if c["chunk_type"] == "meta":
+            continue
         c["chunk_type"] = _classify_chunk_type(c["text"], i, total)
 
     return chunks
 
+
+# ---------- пайплайн ----------
 
 def process_all() -> None:
     docs: list[dict[str, Any]] = []
@@ -413,7 +517,7 @@ def process_all() -> None:
         all_chunks.extend(chunks)
 
         n_inj = sum(1 for c in chunks if c["contains_injection"])
-        n_meta = sum(1 for c in chunks if c.get("chunk_type") == "meta")
+        n_meta = sum(1 for c in chunks if c["chunk_type"] == "meta")
         print(
             f"Обработан: {filepath.name} | "
             f"тип: {meta['doc_type']:<10} | "
@@ -424,11 +528,13 @@ def process_all() -> None:
         )
 
     _link_parent_docs(docs)
-    by_id = {d["doc_id"]: d for d in docs}
+
+    # meta в чанке — без text.
+    by_id = {d["doc_id"]: {k: v for k, v in d.items() if k != "text"} for d in docs}
     for c in all_chunks:
-        doc = by_id.get(c["doc_id"])
-        if doc:
-            c["meta"] = {k: v for k, v in doc.items() if k != "text"}
+        doc_meta = by_id.get(c["doc_id"])
+        if doc_meta:
+            c["meta"] = doc_meta
 
     with open(DOCS_FILE, "w", encoding="utf-8") as f:
         for d in docs:
@@ -440,16 +546,20 @@ def process_all() -> None:
 
     unknown = [d["doc_id"] for d in docs if d["doc_type"] == "unknown"]
     no_anchor = sum(1 for c in all_chunks if not c["anchor"])
-    n_meta = sum(1 for c in all_chunks if c.get("chunk_type") == "meta")
-    n_header_footer = sum(1 for c in all_chunks if c.get("chunk_type") in ("header", "footer"))
+    n_meta = sum(1 for c in all_chunks if c["chunk_type"] == "meta")
+    n_hf = sum(1 for c in all_chunks if c["chunk_type"] in ("header", "footer"))
     inj = sum(1 for c in all_chunks if c["contains_injection"])
+    sizes = [len(c["text"]) for c in all_chunks]
+    big = sum(1 for s in sizes if s > CHUNK_MAX_CHARS)
 
     print(f"\nГотово! Документов: {len(docs)}, чанков: {len(all_chunks)}")
     print(f"unknown doc_type: {len(unknown)} → {unknown}")
     print(f"Чанков без anchor: {no_anchor} / {len(all_chunks)}")
     print(f"Чанков meta: {n_meta} / {len(all_chunks)}")
-    print(f"Чанков header/footer: {n_header_footer} / {len(all_chunks)}")
+    print(f"Чанков header/footer: {n_hf} / {len(all_chunks)}")
     print(f"Чанков с инъекцией: {inj} / {len(all_chunks)}")
+    print(f"Размер чанков: min={min(sizes)}, max={max(sizes)}, avg={sum(sizes)//len(sizes)}")
+    print(f"Чанков > {CHUNK_MAX_CHARS} символов: {big}")
 
 
 if __name__ == "__main__":
