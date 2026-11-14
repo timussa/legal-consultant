@@ -4,6 +4,7 @@ export const ROUTE_NAMES = Object.freeze({
     document: 'document',
     verification: 'verification',
     settings: 'settings',
+    login: 'login',
 });
 
 export const ANSWER_STATUSES = Object.freeze({

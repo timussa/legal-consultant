@@ -51,6 +51,21 @@ export class ApiError extends Error {
     }
 }
 
+const UNAUTHORIZED_STATUS = 401;
+const AUTH_PATH_PREFIX = '/v1/auth/';
+
+/** @type {(() => void) | null} */
+let unauthorizedHandler = null;
+
+/**
+ * Вызывается, когда сервер ответил 401 на обычный запрос: сессия истекла или её отозвали.
+ * Запросы к /v1/auth/* обрабатывают 401 сами (например, неверный пароль на форме входа).
+ * @param {(() => void) | null} handler
+ */
+export function setUnauthorizedHandler(handler) {
+    unauthorizedHandler = handler;
+}
+
 /**
  * Универсальная функция запроса: JSON in/out, поддержка 204, сетевых и HTTP-ошибок.
  * @template T
@@ -69,9 +84,13 @@ export async function api(path, init) {
     let response;
 
     try {
-        response = await fetch(url, {...init, headers});
+        response = await fetch(url, {credentials: 'same-origin', ...init, headers});
     } catch (cause) {
         throw new ApiError(0, url, cause instanceof Error ? cause.message : String(cause));
+    }
+
+    if (response.status === UNAUTHORIZED_STATUS && !path.startsWith(AUTH_PATH_PREFIX)) {
+        unauthorizedHandler?.();
     }
 
     if (!response.ok) {

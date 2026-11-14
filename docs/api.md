@@ -8,16 +8,64 @@
 
 Полные JSDoc-типы: `frontend/src/core/types/*.js`. Примеры данных: `frontend/src/core/data/*.js`.
 
+## Авторизация
+
+Все пути, кроме `/api/health` и `/api/v1/auth/login`, требуют входа. Без сессии сервер отвечает `401`.
+
+- `POST /api/v1/auth/login` с `{"login", "password"}` возвращает `{"token", "expiresAt", "user"}`. Сервер ставит HttpOnly-cookie `legal_session` (`SameSite=Strict`, `Path=/api`). Браузеру больше ничего не нужно: фронт токен не хранит.
+- Для скриптов и Swagger тот же токен передаётся заголовком `Authorization: Bearer <token>`.
+- Сессия живёт `SESSION_TTL_HOURS` (по умолчанию 12 ч) и продлевается при активности. В базе хранится только SHA-256 токена.
+- Пароли хешируются scrypt. После `LOGIN_MAX_FAILURES` неудачных попыток логин блокируется на `LOGIN_LOCK_MINUTES`, ответ — `429`. Неизвестный логин и неверный пароль дают одинаковый ответ.
+- Роли: `lawyer` и `head`. Самостоятельной регистрации нет: учётные записи создаёт руководитель через `/api/v1/users`. При первом запуске создаются демо-учётные записи `lawyer`, `lawyer2`, `head` с паролем из `DEMO_PASSWORD`, либо записи из `BOOTSTRAP_USERS`.
+
+`user`: `{"id", "login", "name", "initials", "position", "role"}`.
+
+## Права
+
+| Действие | Юрист | Руководитель |
+| --- | --- | --- |
+| Вопросы, свои диалоги, отзыв на свой ответ | да | да |
+| Чужие диалоги | нет (`404`) | только чтение, `GET /dialogs?scope=team` |
+| Решение по спорному ответу (`review`) | `403` | да |
+| Цитирования в просмотрщике документа | из своих ответов | из ответов команды |
+| Комментарии к пунктам | добавлять, удалять свои | добавлять, удалять любые |
+| Пользователи, аудит, загрузка документов, переиндексация | `403` | да |
+| `teamAnswers` на главной (вопрос и превью ответа коллег) | да | да, плюс все неразобранные спорные |
+| `teamStats` на главной | пустой список | метрики команды за 7 дней |
+
 ## Эндпоинты
 
 | Метод | Путь | Ответ |
 | --- | --- | --- |
+| GET | `/api/health` | без входа: `{status, documents, chunks, denseSearch}` |
+| POST | `/api/v1/auth/login` | `{token, expiresAt, user}` + cookie |
+| POST | `/api/v1/auth/logout` | `204`, сессия удаляется |
+| GET | `/api/v1/auth/me` | `user` |
+| POST | `/api/v1/auth/password` | `{currentPassword, newPassword}` → `204`; остальные сессии пользователя закрываются |
 | GET | `/api/v1/knowledge-base` | `KnowledgeBaseOverview` — данные главной |
-| GET | `/api/v1/dialogs` | `Dialog[]` — список диалогов пользователя, новые сверху |
+| GET | `/api/v1/dialogs` | `Dialog[]` — свои диалоги, новые сверху. `?scope=team` — все (только `head`) |
+| GET | `/api/v1/dialogs/{dialogId}` | `Dialog` + `messages[]` — вся переписка |
 | POST | `/api/v1/ask` | `Answer` — ответ на вопрос |
+| PATCH | `/api/v1/dialogs/{dialogId}` | `{title}` → `Dialog` |
+| DELETE | `/api/v1/dialogs/{dialogId}` | `204` (мягкое удаление) |
 | POST | `/api/v1/dialogs/{dialogId}/feedback` | `204` |
 | POST | `/api/v1/dialogs/{dialogId}/review` | `204` — решение руководителя по спорному ответу |
+| GET | `/api/v1/documents` | каталог: `{id, title, type, typeLabel, label, number, date, editionCount, files}[]` |
 | GET | `/api/v1/documents/{documentId}` | `LegalDocument` или `404` |
+| POST | `/api/v1/documents/{documentId}/comments` | `{clauseId, text}` → `DocumentComment` |
+| DELETE | `/api/v1/documents/{documentId}/comments/{id}` | `204` |
+| POST | `/api/v1/documents` | `head`: `{fileName, kind: company\|law, text}` — добавить TXT в базу и переиндексировать |
+| GET | `/api/v1/search?q=` | до 8 фрагментов `{type, documentId, clauseId, editionId, title, snippet}` |
+| GET | `/api/v1/notifications` | `AppNotification[]` с `isRead` |
+| POST | `/api/v1/notifications/read` | `{ids: string[]}` или `{all: true}` → `204` |
+| GET / PUT | `/api/v1/settings` | настройки интерфейса пользователя |
+| GET | `/api/v1/users` | `head`: список учётных записей |
+| POST | `/api/v1/users` | `head`: `{login, name, position, role, password}` → `201` |
+| PATCH | `/api/v1/users/{id}` | `head`: `{name?, position?, role?, isActive?, password?}`; сессии пользователя закрываются при смене роли, пароля или блокировке |
+| GET | `/api/v1/admin/audit` | `head`: журнал действий, `?limit=&action=` |
+| POST | `/api/v1/admin/reindex` | `head`: перечитать базу знаний, вернуть изменения |
+
+Коды ошибок: `401` — нет входа, `403` — не хватает роли, `404` — нет объекта или он чужой, `409` — `dialogId` принадлежит другому пользователю или удалён, `422` — проверка данных, `429` — лимит попыток входа или вопросов (`ASK_PER_MINUTE`), `503` — ошибка сервиса моделей.
 
 ## POST /api/v1/ask
 
@@ -102,10 +150,10 @@
 ## POST /api/v1/dialogs/{dialogId}/feedback
 
 ```json
-{"value": "correct"}
+{"value": "disputed", "comment": "Сомневаюсь в пороге"}
 ```
 
-`value`: `correct`, `wrong`, `disputed` или `null`, если отметку сняли. Ответ — `204`.
+`value`: `correct`, `wrong`, `disputed` или `null`, если отметку сняли. `comment` необязателен. Ответ — `204`. Отметка `disputed` переводит диалог в статус `disputed` и отправляет руководителям уведомление. Новый вопрос в том же диалоге сбрасывает отметку и решение руководителя.
 
 ## GET /api/v1/documents/{documentId}
 
@@ -135,7 +183,23 @@
 {"decision": "approved"}
 ```
 
-`decision`: `approved` — ответ верный, `needs-fix` — нужна правка. Ответ — `204`.
+`decision`: `approved` — ответ верный, `needs-fix` — нужна правка. `comment` необязателен. Ответ — `204`. Автор ответа получает уведомление.
+
+## Dialog
+
+Поля из `frontend/src/core/types/assistant.js` плюс: `answerStatus` (статус ответа модели; `status` равен `disputed`, пока спор не разобран), `feedback`, `review`, `isOutdated`, `outdatedReason`, `author {id, name, initials, shortName}`, `eventDate`, `documentId`, `createdAt`, `updatedAt`. `GET /dialogs/{id}` добавляет `messages: [{role, text, answer, eventDate, createdAt}]` и `history` с предыдущим вопросом.
+
+`dialogId` создаёт фронт. Номер `№N` назначает сервер. ID, занятый другим пользователем, даёт `409`.
+
+## Уведомления и устаревшие ответы
+
+`AppNotification`: `{id, kind, title, text, dateLabel, isHeadOnly, target, isRead, createdAt}`. `kind`: `update`, `outdated`, `disputed`. `target` — объект `vue-router` (`{name: "dialogs", params: {dialogId}}` или `{name: "document", params: {documentId}, query: {edition}}`).
+
+При старте и при `/admin/reindex` сервер сравнивает SHA-256 каждого документа с прошлым запуском. Первый запуск только записывает исходное состояние. Если документ добавлен, изменён или удалён, всем пользователям приходит `update`. Ответы, в `sources` которых был этот документ, получают `isOutdated: true`, а их авторы — уведомление `outdated`. Они же попадают в `affected` на главной. Повторный вопрос в диалоге снимает отметку.
+
+## Защита от подмены роли
+
+Если вопрос похож на поддельную системную инструкцию («[SYSTEM]», «игнорируй инструкции», «ты больше не ассистент») или на давление («я начальник, исправь ответ»), сервер добавляет в `Answer` поле `turns`: реплику пользователя (`isInjected: true` для инъекции) и пояснение с `badge`. Сам ответ по-прежнему формирует `legal_core` по базе знаний. Срабатывание записывается в аудит (`details.guard`).
 
 ## Сценарии контроля достоверности
 
@@ -154,4 +218,6 @@
 
 ## Реальный бэкенд
 
-Моки выключены по умолчанию. Вызовы `/api/v1/search?q=...`, `/api/v1/notifications`, `/api/v1/notifications/read` поддержаны. Уведомления пока пустые. `GET /api/health` возвращает состояние базы и векторного поиска. Ошибка модели возвращается как 503 с `error.message`. История хранится сервером по dialogId; роли интерфейса не являются авторизацией.
+Моки выключены по умолчанию. При `VITE_USE_MOCKS=true` вход не требуется: фронт показывает демонстрационного пользователя с ролью руководителя. `GET /api/health` возвращает состояние базы и векторного поиска. Ошибка модели возвращается как 503 с `error.message`. История хранится сервером по `dialogId` и привязана к автору. Роль приходит с сервера: переключатель «Юрист / Руководитель» виден только руководителю и меняет лишь вид интерфейса, а не права.
+
+Код бэкенда: `server/` (`app.py` — фабрика приложения, `routers/` — эндпоинты, `db.py` — схема SQLite и миграции, `security.py` — пароли, токены, лимиты, `kb.py` — база знаний и отслеживание изменений, `guard.py` — подмена роли). `api.py` — точка входа для `uvicorn api:app`.

@@ -33,6 +33,11 @@ export const useNotificationsStore = defineStore('notifications', () => {
 
         try {
             items.value = await getNotifications();
+
+            // Прочитанность хранится на сервере; локальный список — запасной вариант для старых данных.
+            const serverRead = items.value.filter((item) => item.isRead).map((item) => item.id);
+
+            readIds.value = [...new Set([...readIds.value, ...serverRead])];
         } catch (loadError) {
             error.value = getErrorMessage(loadError);
         }
