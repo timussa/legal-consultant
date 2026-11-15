@@ -111,6 +111,38 @@ class CoreTests(unittest.TestCase):
         finally:
             engine.gateway = original
 
+    def test_answer_text_merges_repeated_sources(self):
+        source = {"title": "Регламент · 2.3", "meta": "ред. от 2025-03-01"}
+        other = {"title": "НК · 164", "meta": ""}
+        answer = {"paragraphs": [[{"text": "Первое."}, {"cite": 1}, {"cite": 2}], [{"text": "Второе."}, {"cite": 3}]],
+                  "sources": [source, dict(source), other]}
+        text = answer_text(answer)
+        self.assertTrue(text.startswith("Первое. [1] Второе. [2]"), text)
+        self.assertEqual(text.count("Регламент · 2.3"), 1)
+        self.assertIn("[2] НК · 164", text)
+
+    def test_submission_skips_semantic_check_when_time_is_short(self):
+        class CountingGateway(FakeGateway):
+            calls = 0
+            deadline = 0.0
+            def chat(self, system, data):
+                CountingGateway.calls += 1
+                return super().chat(system, data)
+        engine = self.engine
+        original = engine.gateway
+        gateway = CountingGateway()
+        gateway.deadline = __import__("time").monotonic() + 60
+        engine.gateway = gateway
+        try:
+            answer = engine.ask("Какая арендная плата по договору А-08/2024?", fallback=True)
+            self.assertEqual(CountingGateway.calls, 1)
+            self.assertEqual(answer["status"], "confirmed")
+            CountingGateway.calls = 0
+            engine.ask("Какая арендная плата по договору А-08/2024?")
+            self.assertEqual(CountingGateway.calls, 2)
+        finally:
+            engine.gateway = original
+
     def test_submission_fallback_needs_citation_checked_draft(self):
         class BrokenGateway(FakeGateway):
             def chat(self, system, data):

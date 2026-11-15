@@ -24,6 +24,10 @@ def main():
     if len(ids) != len(set(ids)) or any(not i for i in ids):
         raise ValueError("Некорректные ID")
     os.environ.setdefault("RUN_TIMEOUT_SECONDS", "1080")
+    # Each question takes 2-4 model calls. With 2 parallel questions a full test set
+    # can run out of the time budget, and every unanswered question scores zero.
+    # The gateway retries 429/5xx with backoff, so moderate parallelism is safe.
+    os.environ.setdefault("MAX_WORKERS", "6")
     engine = Engine(source)
     def work(row):
         try:
@@ -32,7 +36,7 @@ def main():
             print("Ошибка обработки: " + type(exc).__name__, file=sys.stderr)
             return row["id"], "Не удалось проверить ответ по базе знаний из-за технической ошибки. Требуется повторная проверка; юридический вывод не сформирован."
     try:
-        with ThreadPoolExecutor(max_workers=max(1, min(8, int(os.getenv("MAX_WORKERS", "2"))))) as pool:
+        with ThreadPoolExecutor(max_workers=max(1, min(8, int(os.getenv("MAX_WORKERS", "6"))))) as pool:
             with Path("submission.csv").open("w", encoding="utf-8", newline="") as f:
                 writer = csv.writer(f, quoting=csv.QUOTE_ALL)
                 writer.writerow(["id", "answer"])

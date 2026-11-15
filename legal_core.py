@@ -519,6 +519,12 @@ Clarification требуется для уточнения обстоятель�
                 result = self.gateway.chat(system, request)
                 sources, rendered = self.validate_answer(result, hits)
                 candidate = (result, sources, rendered)
+                # Batch run close to its time limit: a citation-checked draft beats an
+                # unanswered question, so skip the extra semantic-check call.
+                deadline = getattr(self.gateway, "deadline", float("inf"))
+                if fallback and deadline - time.monotonic() < float(env("FAST_MODE_SECONDS", "240")):
+                    log.warning("Time budget low; skipping semantic check")
+                    break
                 # Semantic check is separate from literal citation validation.
                 verification = self.gateway.chat('''Проверь ответ ассистента в поле answer по evidence.
 Поле question содержит вопрос пользователя. Ошибочная предпосылка пользователя не является
@@ -578,8 +584,23 @@ Clarification требуется для уточнения обстоятель�
 
 
 def answer_text(answer):
-    text = " ".join("".join(p.get("text", "") + (f" [{p['cite']}]" if "cite" in p else "") for p in row) for row in answer["paragraphs"])
-    refs = " ".join(f"[{i}] {s['title']} ({s['meta']})." for i, s in enumerate(answer["sources"], 1))
+    # The same clause cited twice becomes one numbered source in plain text.
+    unique, renumber = {}, {}
+    for index, source in enumerate(answer["sources"], 1):
+        key = (source["title"], source["meta"])
+        renumber[index] = unique.setdefault(key, len(unique) + 1)
+    parts = []
+    for row in answer["paragraphs"]:
+        chunk, cited = "", set()
+        for piece in row:
+            if "cite" not in piece:
+                chunk += piece.get("text", "")
+            elif renumber[piece["cite"]] not in cited:
+                cited.add(renumber[piece["cite"]])
+                chunk += f" [{renumber[piece['cite']]}]"
+        parts.append(chunk)
+    text = " ".join(parts)
+    refs = " ".join(f"[{number}] {title} ({meta})." for (title, meta), number in unique.items())
     missing = answer.get("missingInfo", [])
     limitation = "Недостающие сведения — " + ". ".join(missing) if missing else ""
     result = " ".join(part for part in (text, refs, limitation, answer.get("dateNote", "")) if part)
