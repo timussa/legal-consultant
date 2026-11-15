@@ -1,8 +1,7 @@
 <script setup>
 import {computed, ref} from 'vue';
-import {ArrowRight, ShieldCheck} from 'lucide-vue-next';
+import {Info, ShieldCheck} from 'lucide-vue-next';
 import {VERIFICATION_IMAGES} from '@/assets/images';
-import {ROUTE_NAMES} from '@/core/constants';
 import {FLOW_FUNNEL, FLOW_SCENARIOS, VERIFICATION_FACTS} from '@/core/data/verificationFlow';
 
 import VerificationFlow from '@/components/Verification/VerificationFlow.vue';
@@ -72,17 +71,16 @@ function handleScenarioClick(id) {
                 <VerificationSteps :scenario="scenario" />
             </div>
 
-            <RouterLink
-                v-if="scenario"
+            <p
                 class="verification-page__example"
-                :to="{name: ROUTE_NAMES.dialogs, params: {dialogId: scenario.dialogId}}"
+                aria-live="polite"
             >
-                Посмотреть пример: диалог №{{ scenario.dialogId }}
-                <ArrowRight
+                <Info
                     :size="16"
                     aria-hidden="true"
                 />
-            </RouterLink>
+                {{ scenario ? scenario.text : 'Выберите сценарий, чтобы подсветить его путь по схеме.' }}
+            </p>
         </section>
 
         <div class="verification-page__summary">
@@ -452,7 +450,7 @@ function handleScenarioClick(id) {
         border-radius: $radius-2xl;
         background: linear-gradient(150deg, rgba($color-white, 16%), rgba($color-white, 6%));
         box-shadow: inset 0 1px 0 rgba($color-white, 25%);
-        grid-template-columns: 104px minmax(0, 1fr);
+        grid-template-columns: 136px minmax(0, 1fr);
         gap: $indent-step * 4;
 
         @include padding('y', 3.5);
@@ -469,7 +467,7 @@ function handleScenarioClick(id) {
         white-space: nowrap;
         text-shadow: 0 0 18px rgba($color-orange, 55%);
 
-        @include heading($font-size-3xl);
+        @include heading($font-size-2xl);
     }
 
     &__fact-text {
@@ -478,26 +476,28 @@ function handleScenarioClick(id) {
         line-height: 1.5;
     }
 
+    // Пояснение к подсвеченному сценарию
     &__example {
-        @include focus-ring;
-
         display: inline-flex;
-        align-items: center;
+        align-items: flex-start;
         align-self: center;
-        color: $color-white;
-        border: 1px solid rgba($color-white, 30%);
-        border-radius: $radius-pill;
-        background: rgba($color-white, 12%);
-
-        @include padding('y', 2);
-        @include padding('x', 4);
+        max-width: 760px;
+        margin: 0;
+        color: $color-on-brand-muted;
+        border: 1px solid rgba($color-white, 22%);
+        border-radius: $radius-2xl;
+        background: rgba($color-white, 10%);
         font-size: $font-size-sm;
-        font-weight: $font-weight-bold;
-        text-decoration: none;
+        font-weight: $font-weight-semibold;
+        line-height: 1.45;
         gap: $indent-step * 2;
 
-        @include hover {
-            text-decoration: underline;
+        @include padding('y', 2.5);
+        @include padding('x', 4);
+
+        svg {
+            flex-shrink: 0;
+            margin-top: 2px;
         }
     }
 
