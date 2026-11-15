@@ -1,42 +1,14 @@
 <script setup>
 import {computed} from 'vue';
-import {
-    Check,
-    CircleHelp,
-    CircleSlash,
-    FileText,
-    ListChecks,
-    MessageSquareText,
-    ScanText,
-    Search,
-    ShieldCheck,
-} from 'lucide-vue-next';
-import {
-    FLOW_FINISH,
-    FLOW_GATES,
-    FLOW_GUARD,
-    FLOW_ICONS,
-    FLOW_OUTCOMES,
-    FLOW_STAGES,
-} from '@/core/data/verificationFlow';
+import {Check} from 'lucide-vue-next';
+import {VERIFICATION_IMAGES} from '@/assets/images';
+import {FLOW_FINISH, FLOW_GATES, FLOW_GUARD, FLOW_OUTCOMES, FLOW_STAGES} from '@/core/data/verificationFlow';
 
 const props = defineProps({
     /** @type {import('vue').PropType<(typeof import('@/core/data/verificationFlow').FLOW_SCENARIOS)[number] | null>} */
     scenario: {type: Object, default: null},
 });
 
-const STAGE_ICONS = Object.freeze({
-    [FLOW_ICONS.question]: MessageSquareText,
-    [FLOW_ICONS.parse]: ScanText,
-    [FLOW_ICONS.search]: Search,
-    [FLOW_ICONS.compose]: FileText,
-    [FLOW_ICONS.selfcheck]: ListChecks,
-});
-
-const OUTCOME_ICONS = Object.freeze({
-    [FLOW_OUTCOMES.clarify.id]: CircleHelp,
-    [FLOW_OUTCOMES.refusal.id]: CircleSlash,
-});
 
 /**
  * Элементы основной линии по колонкам сетки: шаг, связка или условие, в конце — итог.
@@ -119,9 +91,10 @@ function getOutcomeColumn(branch) {
                         getState(FLOW_GUARD.id) && `verification-flow__guard--${getState(FLOW_GUARD.id)}`,
                     ]"
                 >
-                    <ShieldCheck
-                        :size="18"
-                        aria-hidden="true"
+                    <img
+                        class="verification-flow__guard-icon"
+                        :src="VERIFICATION_IMAGES.guard"
+                        alt=""
                     />
                     <span>
                         <b>{{ FLOW_GUARD.title }}</b>
@@ -154,13 +127,11 @@ function getOutcomeColumn(branch) {
                         :style="{gridColumn: item.column, '--stage-index': index}"
                     >
                         <div class="verification-flow__stage-head">
-                            <span class="verification-flow__stage-icon">
-                                <component
-                                    :is="STAGE_ICONS[findStage(item.id).icon]"
-                                    :size="19"
-                                    aria-hidden="true"
-                                />
-                            </span>
+                            <img
+                                class="verification-flow__stage-icon"
+                                :src="VERIFICATION_IMAGES.stages[findStage(item.id).icon]"
+                                alt=""
+                            />
                             <span class="verification-flow__stage-number">
                                 {{ FLOW_STAGES.indexOf(findStage(item.id)) + 1 }}
                             </span>
@@ -178,7 +149,12 @@ function getOutcomeColumn(branch) {
                         ]"
                         :style="{gridColumn: item.column}"
                         aria-hidden="true"
-                    />
+                    >
+                        <span
+                            v-if="getState(item.targetId) === 'lit'"
+                            class="verification-flow__spark"
+                        />
+                    </div>
 
                     <div
                         v-else-if="item.type === 'gate'"
@@ -196,12 +172,26 @@ function getOutcomeColumn(branch) {
                             class="verification-flow__gate-stem"
                             aria-hidden="true"
                         />
+                        <span
+                            v-if="getState(item.id) === 'lit'"
+                            class="verification-flow__spark"
+                            aria-hidden="true"
+                        />
                         <span class="verification-flow__gate-question">{{ findGate(item.id).question }}</span>
                         <span
                             class="verification-flow__diamond"
                             aria-hidden="true"
                         >
-                            ?
+                            <img
+                                class="verification-flow__diamond-image"
+                                :src="
+                                    findGate(item.id).branchId === FLOW_OUTCOMES.fix.id
+                                        ? VERIFICATION_IMAGES.gateLoop
+                                        : VERIFICATION_IMAGES.gate
+                                "
+                                alt=""
+                            />
+                            <span class="verification-flow__diamond-mark">?</span>
                         </span>
                         <span class="verification-flow__gate-yes">да</span>
                         <span
@@ -254,13 +244,11 @@ function getOutcomeColumn(branch) {
                         ]"
                         :style="{gridColumn: getOutcomeColumn(branch)}"
                     >
-                        <span class="verification-flow__outcome-icon">
-                            <component
-                                :is="OUTCOME_ICONS[branch.outcome.id]"
-                                :size="20"
-                                aria-hidden="true"
-                            />
-                        </span>
+                        <img
+                            class="verification-flow__outcome-icon"
+                            :src="VERIFICATION_IMAGES.outcomes[branch.outcome.id]"
+                            alt=""
+                        />
                         <span class="verification-flow__outcome-body">
                             <b class="verification-flow__outcome-title">{{ branch.outcome.title }}</b>
                             <span>{{ branch.outcome.text }}</span>
@@ -273,21 +261,29 @@ function getOutcomeColumn(branch) {
 </template>
 
 <style lang="scss">
+// Схема рисуется на тёмной navy-сцене (фон задаёт страница): стеклянные плашки,
+// светлые линии, 3D-иконки. Цвета — производные от брендовых токенов.
 .verification-flow {
     $block: &;
     $gate: var(--flow-gate);
     $link: var(--flow-link);
-    $rail: 3px;
-    $diamond: 26px;
+    $rail: 2px;
+    $diamond: 40px;
     $arrow: 6px;
-    $outcome-width: 236px;
-    $outcome-overlap: 48px;
+    $outcome-width: 250px;
+    $outcome-overlap: 52px;
+    $glass-line: rgba($color-white, 22%);
+    $glass-fill: rgba($color-white, 11%);
+    $rail-color: rgba($color-white, 55%);
+    $loop-color: #b9a2ff;
+    $deep-shadow: #05082e;
 
-    --flow-gate: 96px;
-    --flow-link: 32px;
+    --flow-gate: 84px;
+    --flow-link: 22px;
 
     &__scroller {
         overflow-x: auto;
+        scrollbar-color: rgba($color-white, 30%) transparent;
 
         @include padding('bottom', 2);
     }
@@ -295,16 +291,16 @@ function getOutcomeColumn(branch) {
     &__grid {
         position: relative;
         display: grid;
-        min-width: 1080px;
+        min-width: 1120px;
         grid-template-columns:
             minmax(0, 1fr) $link minmax(0, 1fr) $gate minmax(0, 1fr) $gate minmax(0, 1fr) $link minmax(0, 1fr)
-            $gate minmax(0, 1.2fr);
-        grid-template-rows: 56px 48px auto 20px 40px auto;
+            $gate minmax(0, 1.15fr);
+        grid-template-rows: 56px 52px auto 20px 40px auto;
 
-        @include padding('x', 5);
+        @include padding('x', 4);
     }
 
-    // Защита роли — подложка под всей основной линией
+    // Защищённый контур под всей основной линией
     &__guard {
         position: relative;
         z-index: 0;
@@ -312,34 +308,46 @@ function getOutcomeColumn(branch) {
         align-items: flex-start;
         transition:
             background $duration ease,
+            border-color $duration ease,
             opacity $duration ease;
-        color: $color-violet;
-        border: 1.5px dashed $color-lavender-line;
+        color: $color-on-brand-soft;
+        border: 1px dashed rgba($color-white, 26%);
         border-radius: $radius-3xl * 1.6;
-        background: rgba($color-lavender, 60%);
+        background: linear-gradient(180deg, rgba($color-white, 7%), rgba($color-white, 2%));
         font-size: $font-size-sm;
         line-height: 1.45;
         grid-column: 1 / -1;
         grid-row: 2 / 5;
         gap: $indent-step * 2;
 
-        @include margin('x', -5);
-        @include padding('top', 3.5);
-        @include padding('x', 5);
+        @include margin('x', -4);
+        @include padding('top', 2);
+        @include padding('x', 4);
 
-        svg {
-            flex-shrink: 0;
+        span {
+            @include padding('top', 2);
+        }
+
+        b {
+            color: $color-white;
         }
 
         &--lit {
             border-style: solid;
-            border-color: $color-violet-bright;
-            background: $color-lavender;
+            border-color: rgba($loop-color, 70%);
+            background: linear-gradient(180deg, rgba($loop-color, 18%), rgba($loop-color, 4%));
         }
 
         &--dim {
-            opacity: 0.45;
+            opacity: 0.4;
         }
+    }
+
+    &__guard-icon {
+        flex-shrink: 0;
+        width: 34px;
+        height: 34px;
+        filter: drop-shadow(0 4px 8px rgba($color-ink, 40%));
     }
 
     // Возврат на исправление: дуга над шагами «Ответ» и «Самопроверка»
@@ -360,9 +368,10 @@ function getOutcomeColumn(branch) {
         right: calc(#{$gate} / 2 - #{$rail} / 2);
         bottom: 0;
         left: calc((100% - #{$link} - #{$gate}) / 4 - #{$rail} / 2);
-        border: $rail solid $color-violet-bright;
+        border: $rail solid $loop-color;
         border-bottom: none;
         border-radius: $radius-3xl $radius-3xl 0 0;
+        box-shadow: 0 -2px 14px -4px rgba($loop-color, 70%);
 
         &::after {
             position: absolute;
@@ -371,7 +380,7 @@ function getOutcomeColumn(branch) {
             width: 0;
             height: 0;
             border: $arrow solid transparent;
-            border-top-color: $color-violet-bright;
+            border-top-color: $loop-color;
             content: '';
         }
     }
@@ -381,95 +390,119 @@ function getOutcomeColumn(branch) {
         top: 0;
         left: 50%;
         transform: translateX(-50%);
-        color: $color-violet;
-        border: 1.5px solid $color-lavender-line;
+        color: $color-white;
+        border: 1px solid rgba($loop-color, 60%);
         border-radius: $radius-pill;
-        background: $color-surface;
-        font-size: $font-size-sm;
+        background: rgba(mix($color-violet, $color-navy, 60%), 85%);
+        box-shadow: 0 8px 20px -10px rgba($loop-color, 80%);
+        font-size: $font-size-xs;
         font-weight: $font-weight-bold;
         line-height: 1;
         white-space: nowrap;
 
         @include padding('y', 2);
-        @include padding('x', 4);
+        @include padding('x', 3.5);
     }
 
-    // Шаги основной линии
+    // Шаги основной линии — стеклянные плашки
     &__stage {
         position: relative;
         z-index: 2;
         display: flex;
         flex-direction: column;
+        min-width: 0;
         transition:
             opacity $duration ease,
+            transform $duration $ease-back-out,
             box-shadow $duration ease,
-            border-color $duration ease;
-        border: 1px solid $color-line;
-        border-radius: $radius-3xl * 1.1;
-        background: $color-surface;
-        box-shadow: $shadow-card;
+            border-color $duration ease,
+            background $duration ease;
+        border: 1px solid $glass-line;
+        border-radius: $radius-3xl;
+        background:
+            linear-gradient(155deg, rgba($color-white, 16%) 0%, rgba($color-white, 4%) 55%),
+            $glass-fill;
+        box-shadow:
+            inset 0 1px 0 rgba($color-white, 30%),
+            0 22px 40px -26px rgba($deep-shadow, 90%);
         animation: fade-up $duration-slow $ease-out backwards;
-        animation-delay: calc(var(--stage-index) * 50ms);
+        animation-delay: calc(var(--stage-index) * 60ms);
         grid-row: 3;
         gap: $indent-step * 1.5;
 
-        @include padding('y', 4);
-        @include padding('x', 3);
+        @include padding('top', 3);
+        @include padding('bottom', 3.5);
+        @include padding('x', 3.5);
+
+        @include hover {
+            transform: translateY(-4px);
+            border-color: rgba($color-white, 40%);
+        }
 
         &--lit {
-            border-color: $color-lavender-line;
-            box-shadow: $shadow-raised;
+            border-color: rgba($loop-color, 85%);
+            background:
+                linear-gradient(155deg, rgba($loop-color, 30%) 0%, rgba($color-white, 6%) 60%),
+                $glass-fill;
+            box-shadow:
+                inset 0 1px 0 rgba($color-white, 40%),
+                0 0 0 1px rgba($loop-color, 35%),
+                0 24px 44px -20px rgba($loop-color, 75%);
         }
 
         &--dim {
-            opacity: 0.3;
+            opacity: 0.32;
         }
     }
 
     &__stage-head {
         display: flex;
-        align-items: center;
+        align-items: flex-start;
         justify-content: space-between;
-
-        @include margin('bottom', 1);
     }
 
     &__stage-icon {
-        @include flex-center;
+        width: 52px;
+        height: 52px;
+        margin: (-$indent-step) 0 0 (-$indent-step);
+        transition: transform $duration $ease-back-out;
+        filter: drop-shadow(0 8px 12px rgba($deep-shadow, 55%));
+    }
 
-        width: 36px;
-        height: 36px;
-        color: $color-indigo;
-        border-radius: $radius-lg;
-        background: $color-lavender;
+    &__stage:hover &__stage-icon {
+        transform: translateY(-3px) rotate(-4deg);
     }
 
     &__stage-number {
-        color: $color-ink-decor;
-        font-size: $font-size-sm;
-        font-weight: $font-weight-bold;
+        color: rgba($color-white, 45%);
+        font-size: $font-size-xs;
+        font-weight: $font-weight-extrabold;
+        font-variant-numeric: tabular-nums;
+        letter-spacing: 0.06em;
     }
 
     &__stage-title {
-        color: $color-ink;
+        color: $color-white;
         font-size: $font-size-base;
         font-weight: $font-weight-extrabold;
         line-height: 1.25;
-        hyphens: auto;
+        text-wrap: balance;
     }
 
     &__stage-text {
-        color: $color-ink-muted;
+        color: $color-on-brand-soft;
         font-size: $font-size-xs;
-        line-height: 1.4;
+        line-height: 1.45;
     }
 
     &__stage-chip {
         align-self: flex-start;
+        max-width: 100%;
         margin-top: auto;
-        color: $color-navy;
+        color: $color-white;
+        border: 1px solid rgba($color-white, 26%);
         border-radius: $radius-pill;
-        background: $color-navy-tint;
+        background: rgba($color-white, 12%);
         font-size: $font-size-xs;
         font-weight: $font-weight-bold;
         line-height: 1.3;
@@ -499,8 +532,49 @@ function getOutcomeColumn(branch) {
         top: 50%;
         height: $rail;
         margin-top: -$rail * 0.5;
-        background: $color-navy;
+        border-radius: $radius-pill;
+        background: $rail-color;
         content: '';
+    }
+
+    // Подсвеченный путь: яркая линия + «искра», которая едет только через transform
+    &__link--lit::before,
+    &__gate--lit::before,
+    &__gate--lit::after {
+        background: rgba($color-white, 85%);
+        box-shadow: 0 0 8px rgba($loop-color, 90%);
+    }
+
+    &__link--lit::after,
+    &__gate--lit &__gate-head {
+        border-left-color: $color-white;
+    }
+
+    &__spark {
+        position: absolute;
+        z-index: 1;
+        top: 50%;
+        right: $arrow;
+        left: 0;
+        overflow: hidden;
+        height: $rail * 3;
+        margin-top: -$rail * 1.5;
+        pointer-events: none;
+
+        &::before {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(closest-side, $color-white, rgba($loop-color, 60%) 45%, transparent);
+            background-size: 28px 100%;
+            background-repeat: no-repeat;
+            background-position: center;
+            animation: verification-flow-run 1.4s linear infinite;
+            content: '';
+            will-change: transform;
+        }
     }
 
     &__link {
@@ -518,7 +592,7 @@ function getOutcomeColumn(branch) {
             margin-top: -$arrow;
             border: $arrow solid transparent;
             border-right: none;
-            border-left-color: $color-navy;
+            border-left-color: $rail-color;
             content: '';
         }
     }
@@ -543,34 +617,42 @@ function getOutcomeColumn(branch) {
         width: $diamond;
         height: $diamond;
         transform: translate(-50%, -50%);
-        color: $color-navy;
-        font-size: $font-size-md;
-        font-weight: $font-weight-extrabold;
+        transition: transform $duration $ease-back-out;
 
         @include flex-center;
-
-        &::before {
-            position: absolute;
-            z-index: -1;
-            inset: 0;
-            transform: rotate(45deg);
-            border: $rail solid $color-navy;
-            border-radius: $radius-sm * 0.8;
-            background: $color-surface;
-            content: '';
-        }
     }
 
-    &__gate--lit &__diamond::before {
-        background: $color-lavender;
+    &__gate:hover &__diamond {
+        transform: translate(-50%, -50%) scale(1.12);
+    }
+
+    &__diamond-image {
+        position: absolute;
+        top: -6px;
+        left: -6px;
+        width: calc(100% + 12px);
+        height: calc(100% + 12px);
+        filter: drop-shadow(0 6px 10px rgba($deep-shadow, 60%));
+    }
+
+    &__diamond-mark {
+        position: relative;
+        color: $color-white;
+        font-size: $font-size-md;
+        font-weight: $font-weight-extrabold;
+        text-shadow: 0 1px 4px rgba($color-ink, 60%);
+    }
+
+    &__gate--lit &__diamond-image {
+        filter: drop-shadow(0 0 12px rgba($loop-color, 90%));
     }
 
     &__gate-yes {
         position: absolute;
         top: 50%;
-        right: $indent-step * 2.5;
+        right: $indent-step * 2;
         transform: translateY(calc(-100% - #{$indent-step * 1.5}));
-        color: $color-navy;
+        color: rgba($color-white, 75%);
         font-size: $font-size-2xs;
         font-weight: $font-weight-bold;
     }
@@ -584,27 +666,28 @@ function getOutcomeColumn(branch) {
         margin-top: -$arrow;
         border: $arrow solid transparent;
         border-right: none;
-        border-left-color: $color-navy;
+        border-left-color: $rail-color;
     }
 
     &__gate-question {
         position: absolute;
         left: 50%;
-        width: calc(#{$gate} - #{$indent-step * 2});
+        width: calc(#{$gate} + #{$indent-step * 2});
         transform: translateX(-50%);
-        color: $color-ink;
+        color: $color-white;
         font-size: $font-size-2xs;
         font-weight: $font-weight-bold;
         line-height: 1.3;
         text-align: center;
+        text-wrap: balance;
     }
 
     &__gate--branch &__gate-question {
-        bottom: calc(50% + #{$diamond * 0.75 + $indent-step * 2});
+        bottom: calc(50% + #{$diamond * 0.6 + $indent-step * 2});
     }
 
     &__gate--loop &__gate-question {
-        top: calc(50% + #{$diamond * 0.75 + $indent-step * 2});
+        top: calc(50% + #{$diamond * 0.6 + $indent-step * 2});
     }
 
     // вертикальная линия от условия: вниз к исходу или вверх к дуге
@@ -618,17 +701,17 @@ function getOutcomeColumn(branch) {
     &__gate--branch &__gate-stem {
         top: 50%;
         bottom: 0;
-        background: $color-orange;
+        background: $color-orange-soft;
     }
 
     &__gate--loop &__gate-stem {
         top: 0;
         bottom: 50%;
-        background: $color-violet-bright;
+        background: $loop-color;
     }
 
     &__gate--clarify &__gate-stem {
-        background: $color-gold;
+        background: $color-highlighter-amber;
     }
 
     // Ветка «нет» и исходы
@@ -645,7 +728,7 @@ function getOutcomeColumn(branch) {
             left: 50%;
             width: $rail;
             margin-left: -$rail * 0.5;
-            background: $color-orange;
+            background: $color-orange-soft;
             content: '';
         }
 
@@ -658,16 +741,16 @@ function getOutcomeColumn(branch) {
             margin-left: -$arrow;
             border: $arrow solid transparent;
             border-bottom: none;
-            border-top-color: $color-orange;
+            border-top-color: $color-orange-soft;
             content: '';
         }
 
         &--clarification::before {
-            background: $color-gold;
+            background: $color-highlighter-amber;
         }
 
         &--clarification::after {
-            border-top-color: $color-gold;
+            border-top-color: $color-highlighter-amber;
         }
 
         &--dim {
@@ -677,15 +760,15 @@ function getOutcomeColumn(branch) {
 
     &__branch-label {
         position: absolute;
-        top: $indent-step * 4;
+        top: $indent-step * 3.5;
         left: calc(50% + #{$indent-step * 2});
-        color: $color-peach-ink;
+        color: $color-flash;
         font-size: $font-size-xs;
         font-weight: $font-weight-extrabold;
     }
 
     &__branch--clarification &__branch-label {
-        color: $color-amber-ink;
+        color: $color-highlighter-amber;
     }
 
     &__outcome {
@@ -694,15 +777,28 @@ function getOutcomeColumn(branch) {
         display: flex;
         align-items: center;
         width: $outcome-width;
-        transition: opacity $duration ease;
+        transition:
+            opacity $duration ease,
+            transform $duration $ease-back-out;
+        color: $color-white;
+        border: 1px solid var(--outcome-line);
         border-radius: $radius-3xl;
+        background: linear-gradient(150deg, var(--outcome-fill) 0%, rgba($color-white, 4%) 70%);
+        box-shadow:
+            inset 0 1px 0 rgba($color-white, 25%),
+            0 22px 40px -24px var(--outcome-glow);
         font-size: $font-size-sm;
         line-height: 1.4;
         grid-row: 6;
         gap: $indent-step * 3;
 
-        @include padding('y', 4);
-        @include padding('x', 4);
+        @include padding('y', 3.5);
+        @include padding('left', 3);
+        @include padding('right', 4);
+
+        @include hover {
+            transform: translateY(-3px);
+        }
 
         &--left {
             justify-self: end;
@@ -715,13 +811,15 @@ function getOutcomeColumn(branch) {
         }
 
         &--clarification {
-            color: $color-amber-ink;
-            background: $color-amber;
+            --outcome-line: #{rgba($color-highlighter-amber, 55%)};
+            --outcome-fill: #{rgba($color-gold, 34%)};
+            --outcome-glow: #{rgba($color-gold, 70%)};
         }
 
         &--refusal {
-            color: $color-peach-ink;
-            background: $color-peach;
+            --outcome-line: #{rgba($color-flash, 55%)};
+            --outcome-fill: #{rgba($color-orange, 34%)};
+            --outcome-glow: #{rgba($color-orange, 70%)};
         }
 
         &--dim {
@@ -730,51 +828,68 @@ function getOutcomeColumn(branch) {
     }
 
     &__outcome-icon {
-        @include flex-center;
-
         flex-shrink: 0;
-        width: 40px;
-        height: 40px;
-        color: $color-white;
-        border-radius: $radius-pill;
-    }
-
-    &__outcome--clarification &__outcome-icon {
-        background: $color-gold;
-    }
-
-    &__outcome--refusal &__outcome-icon {
-        background: $color-orange;
+        width: 52px;
+        height: 52px;
+        filter: drop-shadow(0 8px 12px rgba($deep-shadow, 55%));
     }
 
     &__outcome-body {
+        color: rgba($color-white, 82%);
+
         @include column($indent-step * 0.5);
     }
 
     &__outcome-title {
-        color: inherit;
+        color: $color-white;
         font-size: $font-size-base;
     }
 
-    // Итог
+    // Итог — главный акцент схемы
     &__finish {
         position: relative;
         z-index: 2;
         display: flex;
+        overflow: hidden;
         flex-direction: column;
-        transition: opacity $duration ease;
+        transition:
+            opacity $duration ease,
+            transform $duration $ease-back-out;
         color: $color-white;
+        border: 1px solid rgba($color-flash, 60%);
         border-radius: $radius-3xl * 1.3;
-        background: $color-cta;
-        box-shadow: 0 24px 44px -24px rgba($color-cta, 85%);
+        background: linear-gradient(150deg, $color-orange-soft 0%, $color-cta 55%, $color-cta-hover 100%);
+        box-shadow:
+            inset 0 1px 0 rgba($color-white, 45%),
+            0 0 0 6px rgba($color-cta, 18%),
+            0 28px 50px -20px rgba($color-cta, 90%);
         animation: fade-up $duration-slow $ease-out backwards;
-        animation-delay: calc(var(--stage-index) * 50ms);
+        animation-delay: calc(var(--stage-index) * 60ms);
         grid-row: 3;
         gap: $indent-step * 2;
 
         @include padding('y', 5);
         @include padding('x', 4.5);
         @include margin('y', -2.5);
+
+        // блик по стеклу
+        &::after {
+            position: absolute;
+            top: -40%;
+            left: 0;
+            width: 50%;
+            height: 180%;
+            transform: translateX(-120%) rotate(20deg);
+            background: linear-gradient(90deg, transparent, rgba($color-white, 28%), transparent);
+            animation: verification-flow-shine 4.5s $ease-in-out infinite;
+            content: '';
+            pointer-events: none;
+            will-change: transform;
+        }
+
+        @include hover {
+            transform: translateY(-4px);
+        }
 
         &--dim {
             opacity: 0.35;
@@ -786,6 +901,7 @@ function getOutcomeColumn(branch) {
 
         width: 44px;
         height: 44px;
+        border: 1px solid rgba($color-white, 45%);
         border-radius: $radius-pill;
         background: rgba($color-white, 22%);
     }
@@ -794,6 +910,7 @@ function getOutcomeColumn(branch) {
         font-size: $font-size-2xl;
         font-weight: $font-weight-extrabold;
         line-height: 1.2;
+        text-wrap: balance;
 
         @include margin('top', 1);
     }
@@ -801,20 +918,41 @@ function getOutcomeColumn(branch) {
     &__finish-text {
         font-size: $font-size-sm;
         line-height: 1.45;
-        opacity: 0.92;
+        opacity: 0.95;
     }
 
     @include laptop {
-        --flow-gate: 84px;
-        --flow-link: 24px;
+        --flow-gate: 76px;
+        --flow-link: 18px;
 
         &__stage {
-            @include padding('x', 2.5);
+            @include padding('x', 3);
         }
 
         &__stage-title {
             font-size: $font-size-md;
         }
+    }
+}
+
+@keyframes verification-flow-run {
+    from {
+        transform: translateX(-100%);
+    }
+
+    to {
+        transform: translateX(100%);
+    }
+}
+
+@keyframes verification-flow-shine {
+    0%,
+    55% {
+        transform: translateX(-120%) rotate(20deg);
+    }
+
+    100% {
+        transform: translateX(300%) rotate(20deg);
     }
 }
 </style>

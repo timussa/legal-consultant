@@ -1,7 +1,7 @@
 <script setup>
 import {computed, ref} from 'vue';
 import {LoaderCircle, Send} from 'lucide-vue-next';
-import {BRAND_IMAGE} from '@/assets/images';
+import {BRAND_IMAGE, HERO_SCENE} from '@/assets/images';
 import {getGreeting} from '@/core/utils/date';
 
 const props = defineProps({
@@ -25,15 +25,23 @@ function handleSubmit() {
     }
 }
 
-/** @param {string} example */
+const inputRef = ref(null);
+
+/**
+ * Подсказка только подставляет вопрос в поле — отправка по кнопке «Спросить».
+ * @param {string} example
+ */
 function handleExampleClick(example) {
     question.value = example;
-    emit('ask', example);
+    inputRef.value?.focus();
 }
 </script>
 
 <template>
-    <section class="home-hero">
+    <section
+        class="home-hero"
+        :style="{'--hero-scene': `url(${HERO_SCENE})`}"
+    >
         <div class="home-hero__content">
             <p class="home-hero__greeting">{{ greeting }}</p>
             <h1 class="home-hero__title">Ответ по базе знаний — со ссылкой на каждый пункт</h1>
@@ -55,6 +63,7 @@ function handleExampleClick(example) {
                 <div class="home-hero__field">
                     <input
                         id="home-question"
+                        ref="inputRef"
                         v-model="question"
                         class="home-hero__input"
                         type="text"
@@ -112,13 +121,32 @@ function handleExampleClick(example) {
 
     display: grid;
     align-items: center;
-    border-radius: $radius-3xl;
+    border: 1px solid rgba($color-white, 12%);
+    border-radius: $radius-3xl * 1.4;
+    background:
+        linear-gradient(90deg, rgba(#0d1250, 45%) 0%, transparent 60%),
+        var(--hero-scene) right center / cover no-repeat,
+        $color-navy;
+    box-shadow: 0 40px 70px -40px rgba($color-navy, 85%);
     grid-template-columns: minmax(0, 1fr) 300px;
     gap: $indent-step * 6;
 
     @include padding('y', 9);
     @include padding('x', 10);
 
+    // мягкое свечение за знаком параграфа
+    &::before {
+        position: absolute;
+        top: 50%;
+        right: 6%;
+        width: 380px;
+        height: 380px;
+        transform: translateY(-50%);
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba($color-violet-bright, 45%), transparent 65%);
+        content: '';
+        pointer-events: none;
+    }
 
     &__content {
         position: relative;
@@ -263,8 +291,11 @@ function handleExampleClick(example) {
         position: relative;
         z-index: $ui-index-base;
         width: 100%;
-        filter: drop-shadow(0 30px 40px rgba($color-ink, 35%));
-        animation: fade-up $duration-slow $ease-out both;
+        filter: drop-shadow(0 30px 40px rgba(#05082e, 55%));
+        animation:
+            fade-up $duration-slow $ease-out both,
+            home-hero-float 6s $ease-in-out $duration-slow infinite alternate;
+        will-change: transform;
     }
 
     @include tablet {
@@ -325,6 +356,16 @@ function handleExampleClick(example) {
         &__send {
             justify-content: center;
         }
+    }
+}
+
+@keyframes home-hero-float {
+    from {
+        transform: translateY(0);
+    }
+
+    to {
+        transform: translateY(-10px);
     }
 }
 </style>

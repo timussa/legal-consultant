@@ -36,6 +36,7 @@ const {dialogs, isLoading, loadError, askingDialogId, askError, feedback} = stor
 
 const workspace = ref(null);
 const sourcesPanel = ref(null);
+const composer = ref(null);
 const hoveredCite = ref(null);
 const pinnedCite = ref(null);
 
@@ -85,6 +86,14 @@ async function handleAsk(question) {
     const nextDialogId = await dialogsStore.ask(question);
 
     router.push({name: ROUTE_NAMES.dialogs, params: {dialogId: nextDialogId}});
+}
+
+/**
+ * Подсказка только подставляет вопрос в поле ввода — отправка по «Спросить».
+ * @param {string} question
+ */
+function handleFillComposer(question) {
+    composer.value?.fill(question);
 }
 
 /** @param {string} option */
@@ -198,8 +207,9 @@ async function handleCopy() {
 
         <div class="dialogs-page__content">
             <template v-if="!dialogId">
-                <DialogEmpty @ask="handleAsk" />
+                <DialogEmpty @ask="handleFillComposer" />
                 <DialogComposer
+                    ref="composer"
                     placeholder="Задайте вопрос по договорам, регламентам или законам"
                     :is-asking="askingDialogId !== null"
                     @ask="handleAsk"
@@ -270,7 +280,7 @@ async function handleCopy() {
                             @activate-cite="handleActivateCite"
                             @deactivate-cite="handleDeactivateCite"
                             @select-cite="handleSelectCite"
-                            @ask="handleAsk"
+                            @ask="handleFillComposer"
                             @choose-option="handleChooseOption"
                             @feedback="handleFeedback"
                             @copy="handleCopy"
@@ -291,6 +301,7 @@ async function handleCopy() {
                         </p>
 
                         <DialogComposer
+                            ref="composer"
                             :is-asking="isAsking"
                             @ask="handleAsk"
                         />
