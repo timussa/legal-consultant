@@ -1,5 +1,7 @@
 import {createRouter, createWebHistory} from 'vue-router';
+import {setUnauthorizedHandler} from '@/core/api/client';
 import {ROUTE_NAMES} from '@/core/constants';
+import {useSessionStore} from '@/core/stores/session';
 
 import HomePage from '@/pages/HomePage.vue';
 
@@ -9,6 +11,12 @@ export const router = createRouter({
         return savedPosition ?? {top: 0};
     },
     routes: [
+        {
+            path: '/login',
+            name: ROUTE_NAMES.login,
+            component: () => import('@/pages/LoginPage.vue'),
+            meta: {isPublic: true},
+        },
         {path: '/', name: ROUTE_NAMES.home, component: HomePage},
         {
             path: '/dialogs/:dialogId?',
@@ -32,4 +40,36 @@ export const router = createRouter({
         },
         {path: '/:pathMatch(.*)*', redirect: {name: ROUTE_NAMES.home}},
     ],
+});
+
+router.beforeEach(async (to) => {
+    const session = useSessionStore();
+    let isAuthenticated = false;
+
+    try {
+        isAuthenticated = await session.ensure();
+    } catch {
+        // Сервер недоступен: страница сама покажет ошибку запроса, не выкидываем на вход.
+        return true;
+    }
+
+    if (to.meta.isPublic) {
+        return isAuthenticated ? {name: ROUTE_NAMES.home} : true;
+    }
+
+    return isAuthenticated ? true : {name: ROUTE_NAMES.login, query: to.fullPath === '/' ? {} : {redirect: to.fullPath}};
+});
+
+setUnauthorizedHandler(() => {
+    // Сессия истекла во время работы. Полная перезагрузка сбрасывает данные прошлого пользователя.
+    const current = router.currentRoute.value;
+
+    if (current.name === ROUTE_NAMES.login) {
+        return;
+    }
+
+    const redirect = current.fullPath;
+
+    useSessionStore().forget();
+    window.location.assign(`${import.meta.env.BASE_URL}login?redirect=${encodeURIComponent(redirect)}`);
 });

@@ -11,13 +11,15 @@ import ToastContainer from '@/components/Toast/ToastContainer.vue';
 
 const dialogsStore = useDialogsStore();
 const notificationsStore = useNotificationsStore();
-const {settings} = storeToRefs(useSettingsStore());
+const settingsStore = useSettingsStore();
+const {settings} = storeToRefs(settingsStore);
 
 watchEffect(() => {
     document.documentElement.classList.toggle('is-motion-reduced', settings.value.isMotionReduced);
 });
 
 onMounted(() => {
+    settingsStore.sync();
     dialogsStore.load();
     notificationsStore.load();
 });

@@ -68,8 +68,8 @@ describe('dialogs store', () => {
 
         const dialogId = await store.ask('Срок оплаты по договору?');
 
-        expect(dialogId).toBe('413');
-        expect(store.getDialog('413').answer.verdict).toBe('Проверено 1 из 1');
+        expect(Number(dialogId)).toBeGreaterThan(1000000000000);
+        expect(store.getDialog(dialogId).answer.verdict).toBe('Проверено 1 из 1');
     });
 
     it('не теряет вопрос, заданный до окончания загрузки', async () => {

@@ -29,7 +29,7 @@ export const useDialogsStore = defineStore('dialogs', () => {
     const reviews = ref(/** @type {Record<string, string>} */ ({}));
 
     const nextNumber = computed(() => {
-        const numbers = dialogs.value.map((dialog) => Number(dialog.id)).filter(Number.isFinite);
+        const numbers = dialogs.value.map((dialog) => Number(dialog.number?.replace(/^№/, '') ?? dialog.id)).filter(Number.isFinite);
 
         return numbers.length ? Math.max(...numbers) + 1 : 1;
     });
@@ -80,10 +80,10 @@ export const useDialogsStore = defineStore('dialogs', () => {
      * @returns {Dialog}
      */
     function createDialog(question) {
-        const id = String(nextNumber.value);
+        const id = String(Date.now());
         const dialog = {
             id,
-            number: `№${id}`,
+            number: `№${nextNumber.value}`,
             title: makeTitle(question),
             documentLabel: 'определяется',
             timeLabel: 'сейчас',

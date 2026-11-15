@@ -1,17 +1,27 @@
 <script setup>
+import {useRoute} from 'vue-router';
+
 import DefaultLayout from '@/layouts/DefaultLayout.vue';
+
+const route = useRoute();
 </script>
 
 <template>
-    <DefaultLayout>
-        <RouterView v-slot="{Component, route}">
+    <RouterView
+        v-if="route.meta.isPublic"
+        v-slot="{Component}"
+    >
+        <component :is="Component" />
+    </RouterView>
+    <DefaultLayout v-else-if="route.matched.length">
+        <RouterView v-slot="{Component, route: pageRoute}">
             <Transition
                 name="app__page"
                 mode="out-in"
             >
                 <component
                     :is="Component"
-                    :key="route.name"
+                    :key="pageRoute.name"
                 />
             </Transition>
         </RouterView>

@@ -1,0 +1,10 @@
+.git
+.venv
+.env
+frontend
+output
+data/index
+data/*.sqlite*
+__pycache__
+
+.venv-runtime

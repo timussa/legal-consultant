@@ -42,6 +42,7 @@ cover/
 
 # Environments
 .env
+.env.previous
 .envrc
 .venv
 env/
@@ -92,3 +93,7 @@ data/processed/
 # Project specific: Docker / OS
 .DS_Store
 Thumbs.db
+.venv-runtime/
+data/index/
+data/*.sqlite*
+output/

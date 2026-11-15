@@ -3,7 +3,7 @@ import {onBeforeUnmount, onMounted, ref} from 'vue';
 import {Search} from 'lucide-vue-next';
 import {storeToRefs} from 'pinia';
 import {ROUTE_NAMES} from '@/core/constants';
-import {ROLE_OPTIONS, useSessionStore} from '@/core/stores/session';
+import {useSessionStore} from '@/core/stores/session';
 
 import HeaderNotifications from '@/components/Header/HeaderNotifications.vue';
 import SearchPalette from '@/components/Search/SearchPalette.vue';
@@ -13,7 +13,7 @@ import UiSegmented from '@/components/Ui/UiSegmented.vue';
 const EDITABLE_TAGS = Object.freeze(['INPUT', 'TEXTAREA', 'SELECT']);
 
 const sessionStore = useSessionStore();
-const {role, user} = storeToRefs(sessionStore);
+const {role, user, roleOptions, canSwitchRole} = storeToRefs(sessionStore);
 
 const isSearchOpen = ref(false);
 
@@ -62,10 +62,13 @@ function handleShortcut(event) {
         </button>
 
         <div class="the-header__actions">
-            <div class="the-header__roles">
+            <div
+                v-if="canSwitchRole"
+                class="the-header__roles"
+            >
                 <UiSegmented
                     v-model="role"
-                    :options="ROLE_OPTIONS"
+                    :options="roleOptions"
                     label="Роль"
                 />
             </div>
