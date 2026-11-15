@@ -18,7 +18,20 @@ class Handler(BaseHTTPRequestHandler):
     def do_POST(self):
         payload = json.loads(self.rfile.read(int(self.headers["Content-Length"])))
         system = payload["messages"][0]["content"]
-        data = json.loads(payload["messages"][1]["content"])
+        try:
+            data = json.loads(payload["messages"][1]["content"])
+        except ValueError:
+            # Plain-text path (ask_simple): answer only if the right fragment and label were sent.
+            user = payload["messages"][1]["content"]
+            ok = "450 000" in user and "договор аренды № А-08/2024, п. 3.1" in user
+            content = "Арендная плата — 450 000 рублей в месяц (п. 3.1)." if ok else "нет контекста"
+            body = json.dumps({"choices":[{"message":{"content":content}}]}).encode()
+            self.send_response(200)
+            self.send_header("Content-Type","application/json")
+            self.send_header("Content-Length",str(len(body)))
+            self.end_headers()
+            self.wfile.write(body)
+            return
         if "supported" in system:
             result = {"supported": True}
         else:
@@ -59,8 +72,7 @@ class SubmissionTests(unittest.TestCase):
                     rows=list(csv.DictReader(f))
                 self.assertEqual(len(rows),1)
                 self.assertIn("450 000",rows[0]["answer"])
-                self.assertIn("(договор аренды № А-08/2024, п. 3.1)",rows[0]["answer"])
-                self.assertNotIn("[1]",rows[0]["answer"])
+                self.assertEqual(rows[0]["answer"],"Арендная плата — 450 000 рублей в месяц (п. 3.1).")
         finally:
             server.shutdown()
             server.server_close()

@@ -128,6 +128,48 @@ class CoreTests(unittest.TestCase):
         for noise in ("[1]", "Дата события", "Недостающие сведения", "Дата рассматриваемого"):
             self.assertNotIn(noise, prose)
 
+    def test_ask_simple_sends_labelled_fragments_and_returns_prose(self):
+        sent = {}
+        class TextGateway(FakeGateway):
+            deadline = float("inf")
+            def complete(self, system, user_text):
+                sent["system"], sent["user"] = system, user_text
+                return "Да. Арендная плата — 450 000 рублей в месяц (п. 3.1)."
+        engine = self.engine
+        original = engine.gateway
+        engine.gateway = TextGateway()
+        try:
+            answer = engine.ask_simple("Какая арендная плата по договору с ООО «Северный Склад»?")
+        finally:
+            engine.gateway = original
+        self.assertEqual(answer, "Да. Арендная плата — 450 000 рублей в месяц (п. 3.1).")
+        self.assertIn("договор аренды № А-08/2024, п. 3.1", sent["user"])
+        self.assertIn("450 000", sent["user"])
+        self.assertIn("только на приложенные фрагменты", " ".join(sent["system"].split()))
+
+    def test_ask_simple_uses_edition_on_event_date(self):
+        sent = {}
+        class TextGateway(FakeGateway):
+            def complete(self, system, user_text):
+                sent["user"] = user_text
+                return "ok"
+        engine = self.engine
+        original = engine.gateway
+        engine.gateway = TextGateway()
+        try:
+            engine.ask_simple("Договор на 12 млн рублей заключали в августе 2024 года. Нужно ли было одобрение генерального директора?")
+        finally:
+            engine.gateway = original
+        self.assertIn("ред. от 10.01.2023", sent["user"])
+        self.assertNotIn("ред. от 01.03.2025", sent["user"])
+
+    def test_complete_strips_reasoning_and_markdown(self):
+        gateway = Gateway()
+        gateway.model = "test"
+        content = "<think>план</think>**Да.** Срок —\n 30 дней (п. 4.2)."
+        with patch.object(gateway, "post", return_value={"choices": [{"message": {"content": content}}]}):
+            self.assertEqual(gateway.complete("s", "u"), "Да. Срок — 30 дней (п. 4.2).")
+
     def test_answer_text_merges_repeated_sources(self):
         source = {"title": "Регламент · 2.3", "meta": "ред. от 2025-03-01"}
         other = {"title": "НК · 164", "meta": ""}

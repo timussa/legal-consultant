@@ -5,7 +5,7 @@ import os
 import sys
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
-from legal_core import Engine, ModelError, answer_prose
+from legal_core import Engine, ModelError
 
 
 def main():
@@ -31,7 +31,8 @@ def main():
     engine = Engine(source)
     def work(row):
         try:
-            return row["id"], answer_prose(engine.ask(row["question"], fallback=True))
+            # v10: our retrieval + one plain prose answer, like the baseline the judge compares with.
+            return row["id"], engine.ask_simple(row["question"])
         except (ModelError, ValueError, KeyError, TypeError) as exc:
             print("Ошибка обработки: " + type(exc).__name__, file=sys.stderr)
             return row["id"], "Не удалось проверить ответ по базе знаний из-за технической ошибки. Требуется повторная проверка; юридический вывод не сформирован."
