@@ -441,7 +441,8 @@ class Engine:
                     metadata = (metadata + " · ред. от " + d["effective_from"]).strip(" ·")
                 sources.append({"documentId": d["public_id"], "editionId": d["edition_id"],
                     "clauseId": c["anchor"] or c["chunk_id"], "title": d["title"] + " · " + c["anchor"],
-                    "meta": metadata, "before": "", "quote": quote, "after": ""})
+                    "meta": metadata, "label": citation_label(d, c["anchor"]),
+                    "before": "", "quote": quote, "after": ""})
                 row.append({"cite": len(sources)})
             rendered.append(row)
         return sources, rendered
@@ -501,6 +502,9 @@ Clarification требуется для уточнения обстоятель�
 уточнение. При противоречии внутреннего документа закону приоритет имеет закон из evidence.
 Каждое фактическое утверждение в paragraphs должно иметь references с id подтверждающего фрагмента.
 Один paragraph = одно короткое утверждение. Цитата должна подтверждать всё утверждение.
+Первый paragraph — прямой ответ на вопрос со ссылкой. Если вопрос предполагает «да» или «нет»,
+начни этот paragraph словом «Да.» или «Нет.» и продолжи в нём же. Называй документ и его номер
+словами, как юрист: «По договору аренды № А-08/2024 с ООО «Северный Склад» …».
 Цитаты программа возьмёт из базы автоматически. В references возвращай только id, без поля quote.
 Копируй id из evidence точно. Отвечай только на заданный вопрос. Не добавляй справку о сторонах,
 датах подписания, адресах и других условиях, если их не спрашивают. Не придумывай nextSteps.
@@ -581,6 +585,78 @@ Clarification требуется для уточнения обстоятель�
         log.info("answer status=%s evidence=%d sources=%d seconds=%.2f",
                  answer["status"], len(hits), len(sources), time.monotonic() - began)
         return answer
+
+
+LAW_CODES = {"ТК": "ТК РФ", "НК": "НК РФ", "КоАП": "КоАП РФ"}
+
+
+def citation_label(document, anchor):
+    """Human citation as a lawyer writes it: «договор аренды № А-08/2024, п. 3.1», «ТК РФ, ст. 70»."""
+    anchor = (anchor or "").strip()
+    clause = ""
+    if anchor:
+        clause = anchor if anchor.lower().startswith(("ст.", "ч.", "п.", "раздел")) else "п. " + anchor
+    kind = document.get("doc_type")
+    number = (document.get("doc_number") or "").strip()
+    title = " ".join((document.get("title") or "").split())
+    if kind == "law":
+        match = re.match(r"ст\.\s*([\d.]+)\s+(.+)", number)
+        if match:
+            act = LAW_CODES.get(match[2], match[2])
+            article = "ст. " + match[1]
+            extra = anchor[len(article):].strip(" ,") if anchor.startswith(article) else anchor
+            return f"{act}, {article}" + (f", {extra}" if extra else "")
+        return ", ".join(part for part in (title, anchor) if part)
+    if kind == "contract":
+        words = title.lower().split()
+        name = " ".join(words[:2]) if words else "договор"
+        head = f"{name} № {number}" if number else name
+    elif kind == "regulation":
+        head = title.split("ООО")[0].strip().capitalize() or "Регламент"
+        if document.get("effective_from"):
+            y, m, d = document["effective_from"].split("-")
+            head += f", ред. от {d}.{m}.{y}"
+    elif kind == "memo":
+        head = title[:1].lower() + title[1:] + (f" № {number}" if number else "")
+    else:
+        head = title or number
+    return ", ".join(part for part in (head, clause) if part)
+
+
+def answer_prose(answer):
+    """Plain answer text for the batch submission, styled like the golden answers.
+
+    Each statement keeps its citations inline in parentheses; there is no numbered
+    reference list, no service prefixes and no date note. Missing information is
+    stated as ordinary sentences.
+    """
+    sentences = []
+    for row in answer["paragraphs"]:
+        text = "".join(piece.get("text", "") for piece in row if "cite" not in piece).strip()
+        labels = []
+        for piece in row:
+            if "cite" in piece:
+                source = answer["sources"][piece["cite"] - 1]
+                label = source.get("label") or source["title"]
+                if label not in labels:
+                    labels.append(label)
+        if not text:
+            continue
+        if labels:
+            ending = text[-1] if text[-1] in ".!?" else "."
+            text = text.rstrip(".!? ") + " (" + "; ".join(labels) + ")" + ending
+        elif text[-1] not in ".!?»":
+            text += "."
+        sentences.append(text)
+    body = " ".join(sentences)
+    for item in answer.get("missingInfo", []):
+        item = item.strip()
+        if item and item.rstrip(".") not in body:
+            sentences.append(item if item[-1] in ".!?»" else item + ".")
+            body = " ".join(sentences)
+    if len(body) > 10000:
+        raise ModelError("Ответ превышает лимит 10000 символов")
+    return body
 
 
 def answer_text(answer):

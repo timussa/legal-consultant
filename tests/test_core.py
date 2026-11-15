@@ -4,7 +4,7 @@ import tempfile
 import unittest
 from pathlib import Path
 from unittest.mock import patch
-from legal_core import Engine, Gateway, ModelError, event_date_from_text, read_corpus, answer_text, parse_model_json, extract_json_object
+from legal_core import Engine, Gateway, ModelError, event_date_from_text, read_corpus, answer_text, parse_model_json, extract_json_object, answer_prose, citation_label
 import numpy as np
 import httpx
 from src.ingestion.parse import split_into_chunks, extract_metadata
@@ -110,6 +110,23 @@ class CoreTests(unittest.TestCase):
             self.assertIn("450 000", answer_text(answer))
         finally:
             engine.gateway = original
+
+    def test_citation_labels_read_like_a_lawyer(self):
+        e = self.engine
+        by_number = {d["doc_number"]: d for d in e.docs}
+        self.assertEqual(citation_label(by_number["А-08/2024"], "3.1"), "договор аренды № А-08/2024, п. 3.1")
+        self.assertEqual(citation_label(by_number["ст. 70 ТК"], "ст. 70"), "ТК РФ, ст. 70")
+        self.assertEqual(citation_label(by_number["ст. 9 152-ФЗ"], "ч. 2"), "152-ФЗ, ст. 9, ч. 2")
+        regulation = next(d for d in e.docs if d["doc_type"] == "regulation" and d["effective_from"] == "2025-03-01")
+        self.assertEqual(citation_label(regulation, "2.3"), "Регламент согласования договоров, ред. от 01.03.2025, п. 2.3")
+
+    def test_answer_prose_has_inline_citations_and_no_service_text(self):
+        answer = self.engine.ask("Какая арендная плата по договору А-08/2024?")
+        prose = answer_prose(answer)
+        self.assertIn("450 000", prose)
+        self.assertRegex(prose, r"\(договор аренды № А-08/2024, п\. 3\.1\)\.$")
+        for noise in ("[1]", "Дата события", "Недостающие сведения", "Дата рассматриваемого"):
+            self.assertNotIn(noise, prose)
 
     def test_answer_text_merges_repeated_sources(self):
         source = {"title": "Регламент · 2.3", "meta": "ред. от 2025-03-01"}

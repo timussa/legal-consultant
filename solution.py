@@ -5,7 +5,7 @@ import os
 import sys
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
-from legal_core import Engine, ModelError, answer_text
+from legal_core import Engine, ModelError, answer_prose
 
 
 def main():
@@ -28,15 +28,10 @@ def main():
     # can run out of the time budget, and every unanswered question scores zero.
     # The gateway retries 429/5xx with backoff, so moderate parallelism is safe.
     os.environ.setdefault("MAX_WORKERS", "6")
-    # Platform scores: every stricter variant (v2, v5) scored lower, every more
-    # lenient one (v4) higher. The semantic review rejects answers and its correction
-    # round makes them thinner, so the batch run keeps only the code-side citation
-    # check (every reference exists, quotes come from the base). The web API keeps both.
-    os.environ.setdefault("FAST_MODE_SECONDS", "1000000")
     engine = Engine(source)
     def work(row):
         try:
-            return row["id"], answer_text(engine.ask(row["question"], fallback=True))
+            return row["id"], answer_prose(engine.ask(row["question"], fallback=True))
         except (ModelError, ValueError, KeyError, TypeError) as exc:
             print("Ошибка обработки: " + type(exc).__name__, file=sys.stderr)
             return row["id"], "Не удалось проверить ответ по базе знаний из-за технической ошибки. Требуется повторная проверка; юридический вывод не сформирован."

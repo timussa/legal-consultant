@@ -59,7 +59,8 @@ class SubmissionTests(unittest.TestCase):
                     rows=list(csv.DictReader(f))
                 self.assertEqual(len(rows),1)
                 self.assertIn("450 000",rows[0]["answer"])
-                self.assertIn("[1]",rows[0]["answer"])
+                self.assertIn("(договор аренды № А-08/2024, п. 3.1)",rows[0]["answer"])
+                self.assertNotIn("[1]",rows[0]["answer"])
         finally:
             server.shutdown()
             server.server_close()
