@@ -514,6 +514,8 @@ Clarification требуется для уточнения обстоятель�
 "paragraphs":[{"text":"...","references":[{"id":"..."}]}],
 "missingInfo":[],"options":[],"nextSteps":[],"followUps":[]}.
 Для уточнения, отказа или непрофильного вопроса допустим текст без ссылок, но без новых правовых утверждений.'''
+        if env("STYLE_EXAMPLES", "false").lower() == "true":
+            system += STYLE_EXAMPLES_TEXT
         request = {"question": question, "history": history,
             "eventDate": event_date, "dateAssumed": date_assumed,
             "documentId": document_id, "evidence": evidence}
@@ -585,6 +587,23 @@ Clarification требуется для уточнения обстоятель�
         log.info("answer status=%s evidence=%d sources=%d seconds=%.2f",
                  answer["status"], len(hits), len(sources), time.monotonic() - began)
         return answer
+
+
+# Style only, taken from the organizers' public demo_output.csv. The facts of any
+# answer still come from evidence; these show tone, structure and how to refuse.
+STYLE_EXAMPLES_TEXT = '''
+
+Примеры стиля ответа (только стиль; факты всегда бери из evidence, id — из evidence):
+Вопрос: «Почему по договору с ООО «Северный Склад» арендная плата 500 000 рублей в месяц?»
+paragraphs:
+1. «По договору аренды № А-08/2024 с ООО «Северный Склад» арендная плата составляет 450 000 рублей в месяц, включая НДС, а не 500 000.» (ссылка на п. 3.1)
+2. «Арендодатель вправе не чаще раза в год увеличить плату не более чем на 7% с письменным уведомлением.» (ссылка на п. 3.4)
+missingInfo: «Документов о таком увеличении в базе нет.»
+Вопрос: «Какой размер пособия по беременности и родам?» — status refusal, один paragraph:
+«В базе знаний нет документов о пособиях по беременности и родам, поэтому ответить по документам я не могу. По памяти отвечать не буду.»
+Вопрос: «Сотрудник на испытательном сроке. На него распространяются обычные трудовые правила?»
+paragraphs: «Да. Во время испытания на работника распространяются положения трудового законодательства, коллективного договора, соглашений и локальных нормативных актов работодателя.» (ссылка на ТК РФ, ст. 70)
+Пиши так же: прямо, полными предложениями, с точными числами и условиями из источника.'''
 
 
 LAW_CODES = {"ТК": "ТК РФ", "НК": "НК РФ", "КоАП": "КоАП РФ"}
