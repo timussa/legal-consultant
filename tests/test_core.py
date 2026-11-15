@@ -91,6 +91,39 @@ class CoreTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             parse_model_json('{"value":')
 
+    def test_submission_fallback_after_rejected_semantic_check(self):
+        class RejectingGateway(FakeGateway):
+            def chat(self, system, data):
+                if "supported" in system:
+                    return {"supported": False, "reason": "сомнительно"}
+                return super().chat(system, data)
+        engine = self.engine
+        original = engine.gateway
+        engine.gateway = RejectingGateway()
+        try:
+            question = "Какая арендная плата по договору А-08/2024?"
+            with self.assertRaises(ModelError):
+                engine.ask(question)
+            answer = engine.ask(question, fallback=True)
+            self.assertEqual(answer["status"], "confirmed")
+            self.assertTrue(answer["sources"])
+            self.assertIn("450 000", answer_text(answer))
+        finally:
+            engine.gateway = original
+
+    def test_submission_fallback_needs_citation_checked_draft(self):
+        class BrokenGateway(FakeGateway):
+            def chat(self, system, data):
+                return {"status": "confirmed", "paragraphs": [{"text": "Выдумка.", "references": [{"id": "нет-такого"}]}]}
+        engine = self.engine
+        original = engine.gateway
+        engine.gateway = BrokenGateway()
+        try:
+            with self.assertRaises(ModelError):
+                engine.ask("Какая арендная плата по договору А-08/2024?", fallback=True)
+        finally:
+            engine.gateway = original
+
     def test_json_wrapped_in_reasoning_or_prose(self):
         self.assertEqual(extract_json_object('<think>{"draft": 1}</think>\n{"status":"refusal"}'), {"status": "refusal"})
         self.assertEqual(extract_json_object('Вот ответ:\n```json\n{"a": {"b": [1]}}\n```'), {"a": {"b": [1]}})

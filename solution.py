@@ -27,7 +27,7 @@ def main():
     engine = Engine(source)
     def work(row):
         try:
-            return row["id"], answer_text(engine.ask(row["question"]))
+            return row["id"], answer_text(engine.ask(row["question"], fallback=True))
         except (ModelError, ValueError, KeyError, TypeError) as exc:
             print("Ошибка обработки: " + type(exc).__name__, file=sys.stderr)
             return row["id"], "Не удалось проверить ответ по базе знаний из-за технической ошибки. Требуется повторная проверка; юридический вывод не сформирован."

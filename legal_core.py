@@ -446,8 +446,16 @@ class Engine:
             rendered.append(row)
         return sources, rendered
 
-    def ask(self, question, history=None, event_date=None, document_id=None):
+    def ask(self, question, history=None, event_date=None, document_id=None, fallback=False):
+        """Answer a question from the knowledge base.
+
+        fallback=True is for the batch submission only: if the semantic check rejects
+        both attempts, return the last draft that passed the code-side citation check
+        (every reference exists, quotes are copied from the base) instead of failing.
+        The web API keeps the strict default and never shows such a draft.
+        """
         began = time.monotonic()
+        candidate = None
         history = (history or [])[-12:]
         query = "\n".join(m["text"] for m in history if m["role"] == "user") + "\n" + question
         current_question = bool(re.search(r"сейчас|сегодня|текущ\w*|в настоящее время", question, re.IGNORECASE))
@@ -510,6 +518,7 @@ Clarification требуется для уточнения обстоятель�
             try:
                 result = self.gateway.chat(system, request)
                 sources, rendered = self.validate_answer(result, hits)
+                candidate = (result, sources, rendered)
                 # Semantic check is separate from literal citation validation.
                 verification = self.gateway.chat('''Проверь ответ ассистента в поле answer по evidence.
 Поле question содержит вопрос пользователя. Ошибочная предпосылка пользователя не является
@@ -537,6 +546,10 @@ Clarification требуется для уточнения обстоятель�
                 break
             except ModelError as exc:
                 if attempt == 1:
+                    if fallback and candidate is not None:
+                        result, sources, rendered = candidate
+                        log.warning("Semantic check rejected both attempts; returning citation-checked draft")
+                        break
                     raise
                 request["validationError"] = str(exc)
                 request["previousAnswer"] = {
