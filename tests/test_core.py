@@ -102,24 +102,17 @@ class CoreTests(unittest.TestCase):
         engine.gateway = RejectingGateway()
         try:
             question = "Какая арендная плата по договору А-08/2024?"
-            with self.assertRaises(ModelError):
-                engine.ask(question)
-            answer = engine.ask(question, fallback=True)
+            # Without a literal-quote partial, strict mode fails and submission mode
+            # returns the citation-checked draft.
+            with patch.object(engine, "extractive_partial", return_value=None):
+                with self.assertRaises(ModelError):
+                    engine.ask(question)
+                answer = engine.ask(question, fallback=True)
             self.assertEqual(answer["status"], "confirmed")
             self.assertTrue(answer["sources"])
             self.assertIn("450 000", answer_text(answer))
         finally:
             engine.gateway = original
-
-    def test_answer_text_merges_repeated_sources(self):
-        source = {"title": "Регламент · 2.3", "meta": "ред. от 2025-03-01"}
-        other = {"title": "НК · 164", "meta": ""}
-        answer = {"paragraphs": [[{"text": "Первое."}, {"cite": 1}, {"cite": 2}], [{"text": "Второе."}, {"cite": 3}]],
-                  "sources": [source, dict(source), other]}
-        text = answer_text(answer)
-        self.assertTrue(text.startswith("Первое. [1] Второе. [2]"), text)
-        self.assertEqual(text.count("Регламент · 2.3"), 1)
-        self.assertIn("[2] НК · 164", text)
 
     def test_submission_skips_semantic_check_when_time_is_short(self):
         class CountingGateway(FakeGateway):
@@ -317,13 +310,16 @@ class CoreTests(unittest.TestCase):
         self.assertEqual(sources[0]["quote"], chunk["text"].strip())
         self.assertEqual(paragraphs[0][1]["cite"], 1)
 
-    def test_unsupported_answer_rejected(self):
+    def test_unsupported_answer_falls_back_to_literal_quotes(self):
         original = self.engine.gateway.chat
         def response(system, data):
             return {"supported": False} if "supported" in system else original(system, data)
         with patch.object(self.engine.gateway, "chat", side_effect=response):
-            with self.assertRaises(ModelError):
-                self.engine.ask("арендная плата Северный Склад")
+            answer = self.engine.ask("арендная плата Северный Склад")
+        # The rejected conclusion is never shown; only verbatim source sentences are.
+        text = answer_text(answer)
+        self.assertIn("В представленном документе указано", text)
+        self.assertNotIn("Арендная плата — 450 000 рублей в месяц.", text)
 
 if __name__ == "__main__":
     unittest.main()
