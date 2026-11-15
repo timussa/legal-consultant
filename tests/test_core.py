@@ -4,7 +4,7 @@ import tempfile
 import unittest
 from pathlib import Path
 from unittest.mock import patch
-from legal_core import Engine, Gateway, ModelError, event_date_from_text, read_corpus, answer_text, parse_model_json
+from legal_core import Engine, Gateway, ModelError, event_date_from_text, read_corpus, answer_text, parse_model_json, extract_json_object
 import numpy as np
 import httpx
 from src.ingestion.parse import split_into_chunks, extract_metadata
@@ -90,6 +90,19 @@ class CoreTests(unittest.TestCase):
             parse_model_json('{"text":"unfinished')
         with self.assertRaises(ValueError):
             parse_model_json('{"value":')
+
+    def test_json_wrapped_in_reasoning_or_prose(self):
+        self.assertEqual(extract_json_object('<think>{"draft": 1}</think>\n{"status":"refusal"}'), {"status": "refusal"})
+        self.assertEqual(extract_json_object('Вот ответ:\n```json\n{"a": {"b": [1]}}\n```'), {"a": {"b": [1]}})
+        with self.assertRaises(ValueError):
+            extract_json_object("нет JSON")
+
+    def test_chat_recovers_json_after_reasoning(self):
+        gateway = Gateway()
+        gateway.model = "test"
+        content = '<think>сначала подумаю {не json}</think>Ответ: {"supported": true, "reason": "ok"}'
+        with patch.object(gateway, "post", return_value={"choices": [{"message": {"content": content}}]}):
+            self.assertEqual(gateway.chat("system", {"answer": {}}), {"supported": True, "reason": "ok"})
 
     def test_embedding_cache_and_invalidation(self):
         class DenseGateway(FakeGateway):
