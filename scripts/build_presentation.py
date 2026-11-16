@@ -92,7 +92,7 @@ td {{ padding: 14px 18px; border-bottom: 1px solid #E1E3EE; }}
 a {{ color: inherit; }}
 {css}
 .rise {{ animation: none !important; opacity: 1 !important; transform: none !important; }}
-.avatar {{ width: 240px; height: 240px; border-radius: 50%; object-fit: cover; border: 4px solid rgba(255,255,255,0.35);
+.avatar {{ width: 300px; height: 300px; border-radius: 24px; object-fit: contain; border: 4px solid rgba(255,255,255,0.35);
   box-shadow: 0 20px 40px -20px rgba(5,8,46,0.9); }}
 .avatar--initials {{ display: flex; align-items: center; justify-content: center; box-sizing: border-box;
   background: linear-gradient(150deg, #7B4FD8, #1F2A85); color: #F4F3FF; font-size: 72px; font-weight: 800; }}
