@@ -1,0 +1,19 @@
+{
+  "v": 5,
+  "createdOnFiles": {"v": 1, "at": "2026-11-15T20:10:00Z"},
+  "lists": "css",
+  "format": {"v": 1, "shared": ["project/deck.css"]},
+  "title": "Юрассистент — Hack&Change 2026",
+  "order": ["cover", "problem", "solution", "architecture", "pipeline", "trust", "examples", "interface", "roles", "limits", "roadmap", "team"],
+  "sections": {
+    "intro": {"description": "Кто мы, как проверить решение, какую проблему юристов решаем", "start": "cover"},
+    "tech": {"description": "Архитектура, поиск и двойная проверка каждого ответа", "start": "solution"},
+    "product": {"description": "Как ассистент ведёт себя в сложных ситуациях и как выглядит интерфейс", "start": "trust"},
+    "next": {"description": "Ограничения, путь внедрения в банке и команда", "start": "limits"}
+  },
+  "faces": {
+    "manrope": {"family": "Manrope", "href": "https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap"},
+    "pt-serif": {"family": "PT Serif", "href": "https://fonts.googleapis.com/css2?family=PT+Serif:wght@400;700&display=swap"}
+  },
+  "designSystems": []
+}

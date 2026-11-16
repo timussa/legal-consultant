@@ -1,0 +1,32 @@
+<section id="architecture" class="light" style="padding:128px 128px 160px">
+<p class="eyebrow">АРХИТЕКТУРА</p>
+<h2>Одно ядро для веб-интерфейса и сабмита</h2>
+<div class="row" style="align-items:stretch; gap:24px; margin-top:8px">
+<div style="display:flex; flex-direction:column; gap:24px; width:520px">
+<div class="card rise" style="--i:0; padding:32px">
+<h3>Веб-интерфейс</h3>
+<p class="body">Vue 3, Pinia, Vite · чат, просмотр документов, роли</p>
+</div>
+<div class="card rise" style="--i:1; padding:32px">
+<h3>Бэкенд FastAPI</h3>
+<p class="body">Вход и роли, диалоги, отзывы, аудит · SQLite</p>
+</div>
+<div class="card rise" style="--i:2; padding:32px">
+<h3>solution.py</h3>
+<p class="body">Сабмит: те же модули, без сервера</p>
+</div>
+</div>
+<div style="display:flex; align-items:center; width:96px">
+<x-shape kind="arrow-right" style="width:96px; height:48px; background:#7B4FD8"></x-shape>
+</div>
+<div class="card grow rise" style="--i:3; background:#1F2A85; border-color:#1F2A85; color:#F4F3FF">
+<h3 style="color:#F4F3FF">legal_core.Engine</h3>
+<p class="body" style="color:#D8D6FF"><b style="color:#F4F3FF">Разбор базы:</b> 21 документ → 474 фрагмента с номерами пунктов, редакциями и датами</p>
+<p class="body" style="color:#D8D6FF"><b style="color:#F4F3FF">Поиск:</b> BM25 + bge-m3, объединение рангов, фильтр по редакции на дату, Qwen3 Reranker по желанию</p>
+<p class="body" style="color:#D8D6FF"><b style="color:#F4F3FF">Генерация:</b> DeepSeek V4.1 Flash, ответ в JSON со статусом и id фрагментов</p>
+<p class="body" style="color:#D8D6FF"><b style="color:#F4F3FF">Проверки:</b> ссылки — кодом, выводы — отдельным вызовом модели</p>
+</div>
+</div>
+<div class="foot"><span>Код и контракт API — в репозитории: legal_core.py, server/, docs/api.md</span><span class="page"></span></div>
+<aside>Веб-бэкенд и скрипт сабмита используют одно ядро legal_core, поэтому то, что видит жюри в интерфейсе, и то, что оценивает LLM-судья, работает одинаково.</aside>
+</section>

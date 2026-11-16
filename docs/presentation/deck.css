@@ -1,0 +1,219 @@
+:root {
+  --navy: #1F2A85;
+  --night: #121860;
+  --indigo: #3A2FA8;
+  --violet: #7B4FD8;
+  --glow: #B9A2FF;
+  --cta: #E0560F;
+  --orange: #F28A4E;
+  --amber: #FFE9A8;
+  --ink: #1A1F4D;
+  --ink-soft: #4A4F72;
+  --page: #F5F6FA;
+  --paper: #FDFDFF;
+  --line: #E1E3EE;
+  --lavender: #EFEDFD;
+  --on-dark: #F4F3FF;
+  --on-dark-soft: #D8D6FF;
+}
+
+body {
+  font-family: 'Manrope', Arial, sans-serif;
+  color: var(--ink);
+}
+
+section {
+  padding: 128px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+  counter-increment: page;
+}
+
+/* Two backgrounds: night scene with glass, and a light page */
+section.dark {
+  background: var(--night);
+  color: var(--on-dark);
+}
+
+section.light {
+  background: var(--page);
+  color: var(--ink);
+}
+
+.scene {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 1920px;
+  height: 1080px;
+  object-fit: cover;
+}
+
+.shade {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 1920px;
+  height: 1080px;
+  background: linear-gradient(90deg, rgba(10, 14, 64, 0.82) 0%, rgba(10, 14, 64, 0.35) 70%, rgba(10, 14, 64, 0.1) 100%);
+}
+
+/* Type scale: 120 / 72 / 44 / 32 / 24 */
+h1 {
+  font-size: 120px;
+  font-weight: 800;
+  line-height: 1.02;
+  letter-spacing: -2px;
+}
+
+h2 {
+  font-size: 72px;
+  font-weight: 800;
+  line-height: 1.08;
+  letter-spacing: -1px;
+}
+
+h3 {
+  font-size: 32px;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.eyebrow {
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: 2px;
+  color: var(--cta);
+}
+
+.dark .eyebrow {
+  color: var(--orange);
+}
+
+.lead {
+  font-size: 32px;
+  line-height: 1.45;
+  color: var(--ink-soft);
+}
+
+.dark .lead {
+  color: var(--on-dark-soft);
+}
+
+.body {
+  font-size: 24px;
+  line-height: 1.5;
+  color: var(--ink-soft);
+}
+
+.dark .body {
+  color: var(--on-dark-soft);
+}
+
+.num {
+  font-family: 'PT Serif', Georgia, serif;
+  font-size: 72px;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--cta);
+}
+
+.dark .num {
+  color: var(--orange);
+}
+
+/* Cards */
+.glass {
+  background: linear-gradient(150deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.05));
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 32px;
+  box-shadow: 0 28px 60px -30px rgba(5, 8, 46, 0.9);
+  padding: 40px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.card {
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 32px;
+  box-shadow: 0 24px 48px -32px rgba(26, 31, 77, 0.45);
+  padding: 40px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.row {
+  display: flex;
+  gap: 32px;
+}
+
+.grow {
+  flex: 1;
+}
+
+.icon {
+  width: 96px;
+  height: 96px;
+  object-fit: contain;
+}
+
+.pill {
+  font-size: 24px;
+  font-weight: 700;
+  border-radius: 999px;
+  padding: 8px 24px;
+  background: var(--lavender);
+  color: var(--indigo);
+}
+
+.dark .pill {
+  background: rgba(255, 255, 255, 0.14);
+  color: var(--on-dark);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.code {
+  font-family: 'Courier New', monospace;
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--on-dark);
+}
+
+.shot {
+  border-radius: 24px;
+  border: 1px solid var(--line);
+  box-shadow: 0 30px 60px -30px rgba(26, 31, 77, 0.5);
+  object-fit: cover;
+}
+
+/* Page number footer */
+.foot {
+  position: absolute;
+  left: 128px;
+  bottom: 56px;
+  width: 1664px;
+  font-size: 24px;
+  color: var(--ink-soft);
+  display: flex;
+  justify-content: space-between;
+}
+
+.dark .foot {
+  color: var(--on-dark-soft);
+}
+
+.foot .page::after {
+  content: counter(page);
+}
+
+/* Static deck for PDF submission: no motion. */
+.rise {
+  opacity: 1;
+}

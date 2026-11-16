@@ -1,0 +1,17 @@
+<section id="trust" class="light" style="padding:128px 128px 160px; gap:32px">
+<p class="eyebrow">СЦЕНАРИИ ИЗ КЕЙСА</p>
+<h2>Поведение в сложных ситуациях</h2>
+<table style="font-size:24px; color:#1A1F4D">
+<tr><th style="width:34%">Ситуация</th><th style="width:20%">Статус ответа</th><th style="width:46%">Что делает ассистент</th></tr>
+<tr><td>Ответ есть в базе</td><td>confirmed</td><td>Отвечает, на каждое утверждение — сноска на пункт</td></tr>
+<tr style="background:#EFEDFD"><td>Недостаточно данных</td><td>refusal</td><td>Говорит, что проверено и чего не хватает</td></tr>
+<tr><td>Ошибка в вопросе</td><td>correction</td><td>Указывает ошибку и даёт верное значение со ссылкой</td></tr>
+<tr style="background:#EFEDFD"><td>Неясно, какой договор</td><td>clarification</td><td>Задаёт уточняющий вопрос, только если без него никак</td></tr>
+<tr><td>Нужна старая редакция закона</td><td>refusal</td><td>Даёт действующую норму, вывод на прошлую дату не делает</td></tr>
+<tr style="background:#EFEDFD"><td>Давление, поддельный [SYSTEM]</td><td>confirmed</td><td>Сохраняет роль и подтверждённый ответ</td></tr>
+<tr><td>Просьба нарушить порядок</td><td>refusal</td><td>Не помогает, объясняет законный порядок по базе</td></tr>
+<tr style="background:#EFEDFD"><td>Вопрос не по теме</td><td>off-topic</td><td>Вежливо объясняет границы компетенции</td></tr>
+</table>
+<div class="foot"><span>Строки из документов вида «внимание для ИИ…» в модель не попадают</span><span class="page"></span></div>
+<aside>Все пять ситуаций из пункта 4 кейса плюс непрофильные вопросы. Статусы — реальные значения из ответа ядра.</aside>
+</section>

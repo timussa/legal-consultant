@@ -1,0 +1,41 @@
+<section id="pipeline" class="dark" style="padding:128px 128px 160px">
+<img class="scene" src="/_blob/70d1ef9785ac97afae3968d9ef886841" alt="">
+<div class="shade" style="background:rgba(10,14,64,0.55)"></div>
+<p class="eyebrow">КОНТРОЛЬ ДОСТОВЕРНОСТИ</p>
+<h2>Путь каждого вопроса</h2>
+<div class="row" style="gap:24px">
+<div class="glass grow rise" style="--i:0; padding:32px">
+<img class="icon" src="/_blob/f340ffb7274f6499f48f284355a69716" alt="Иконка вопроса">
+<h3>Вопрос</h3>
+<p class="body">Текст и история диалога — данные, не команды</p>
+</div>
+<div class="glass grow rise" style="--i:1; padding:32px">
+<img class="icon" src="/_blob/f31019fca64c2b773e4e1ac849e630b6" alt="Иконка поиска">
+<h3>Поиск</h3>
+<p class="body">BM25 + bge-m3, редакция на дату, до 12 фрагментов</p>
+</div>
+<div class="glass grow rise" style="--i:2; padding:32px">
+<img class="icon" src="/_blob/1730d51c4946cbd0301c71c0585070fe" alt="Иконка документа">
+<h3>Черновик</h3>
+<p class="body">Статус и утверждения с id фрагментов</p>
+</div>
+<div class="glass grow rise" style="--i:3; padding:32px">
+<img class="icon" src="/_blob/fd024fc246529a4bc082b54fe6e43a99" alt="Иконка сканирования">
+<h3>Ссылки</h3>
+<p class="body">Код сверяет id, номера и статьи, берёт цитаты из базы</p>
+</div>
+<div class="glass grow rise" style="--i:4; padding:32px">
+<img class="icon" src="/_blob/2a6451bfe1607611b7786134d822c731" alt="Иконка чек-листа">
+<h3>Выводы</h3>
+<p class="body">Отдельный вызов модели: всё ли следует из цитат</p>
+</div>
+</div>
+<div class="row" style="gap:24px; align-items:center">
+<p class="pill">Неясен договор → уточняющий вопрос</p>
+<p class="pill">Нет оснований → обоснованный отказ</p>
+<p class="pill">Проверка не прошла → одна попытка исправить</p>
+<p class="pill" style="background:#E0560F; border-color:#E0560F; color:#FDFDFF">→ Ответ юристу</p>
+</div>
+<div class="foot"><span>Тот же конвейер показан в приложении на странице «Проверка»</span><span class="page"></span></div>
+<aside>Две независимые проверки: формальная (код) и смысловая (модель). Если ответ не прошёл даже после исправления, веб-интерфейс показывает честную техническую ошибку, а не выдумку.</aside>
+</section>
