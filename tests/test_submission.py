@@ -72,7 +72,8 @@ class SubmissionTests(unittest.TestCase):
                     rows=list(csv.DictReader(f))
                 self.assertEqual(len(rows),1)
                 self.assertIn("450 000",rows[0]["answer"])
-                self.assertEqual(rows[0]["answer"],"Арендная плата — 450 000 рублей в месяц (п. 3.1).")
+                self.assertIn("450 000",rows[0]["answer"])
+                self.assertIn("[1]",rows[0]["answer"])
         finally:
             server.shutdown()
             server.server_close()

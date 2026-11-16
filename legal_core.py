@@ -306,7 +306,7 @@ class Engine:
         self.by_id = {d["doc_id"]: d for d in self.docs}
         # Keep original source intact; remove instruction-bearing lines only from model context.
         self.search_texts = [self.safe_text(c["text"]) for c in self.chunks]
-        corpus = [search_terms(self.by_id[c["doc_id"]]["title"] + " " + c["doc_id"] + " " + t) or ["_"]
+        corpus = [tokens(self.by_id[c["doc_id"]]["title"] + " " + c["doc_id"] + " " + t) or ["_"]
                   for c, t in zip(self.chunks, self.search_texts)]
         self.bm25 = BM25Okapi(corpus)
         self.vectors = None
@@ -374,7 +374,7 @@ class Engine:
 
     def search(self, question, event_date=None, limit=12):
         event_date = event_date or date.today().isoformat()
-        scores = self.bm25.get_scores(search_terms(question))
+        scores = self.bm25.get_scores(tokens(question))
         lexical = [int(i) for i in np.argsort(-scores) if scores[i] > 0 and self.eligible(self.chunks[i], event_date)][:40]
         ranks = {i: 1 / (60 + rank) for rank, i in enumerate(lexical, 1)}
         if self.vectors is not None:
@@ -576,9 +576,6 @@ Clarification требуется для уточнения обстоятель�
 уточнение. При противоречии внутреннего документа закону приоритет имеет закон из evidence.
 Каждое фактическое утверждение в paragraphs должно иметь references с id подтверждающего фрагмента.
 Один paragraph = одно короткое утверждение. Цитата должна подтверждать всё утверждение.
-Первый paragraph — прямой ответ на вопрос со ссылкой. Если вопрос предполагает «да» или «нет»,
-начни этот paragraph словом «Да.» или «Нет.» и продолжи в нём же. Называй документ и его номер
-словами, как юрист: «По договору аренды № А-08/2024 с ООО «Северный Склад» …».
 Цитаты программа возьмёт из базы автоматически. В references возвращай только id, без поля quote.
 Копируй id из evidence точно. Отвечай только на заданный вопрос. Не добавляй справку о сторонах,
 датах подписания, адресах и других условиях, если их не спрашивают. Не придумывай nextSteps.
