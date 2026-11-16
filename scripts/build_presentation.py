@@ -57,6 +57,7 @@ for slide_id in index["order"]:
         if not path.is_file():
             sys.exit(f"missing image {path}")
         html = html.replace(f"/_blob/{blob}", path.resolve().as_uri())
+    html = html.replace('src="qr:repo"', f'src="{(deck / "qr-repo.png").resolve().as_uri()}"')
     team_dir = repo.parent / "team"
     def avatar(match):
         name, initials = match[1], match[2]
