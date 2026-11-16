@@ -11,6 +11,7 @@ const props = defineProps({
 const emit = defineEmits(['ask']);
 
 const text = ref(props.initialText);
+const inputRef = ref(null);
 
 const canSend = computed(() => text.value.trim().length > 0 && !props.isAsking);
 
@@ -30,6 +31,17 @@ function handleSubmit() {
     text.value = '';
 }
 
+/**
+ * Подставить вопрос из подсказки: без отправки и без прокрутки страницы.
+ * @param {string} value
+ */
+function fill(value) {
+    text.value = value;
+    inputRef.value?.focus({preventScroll: true});
+}
+
+defineExpose({fill});
+
 /** @param {KeyboardEvent} event */
 function handleKeydown(event) {
     if (event.key === 'Enter' && !event.shiftKey) {
@@ -45,6 +57,7 @@ function handleKeydown(event) {
         @submit.prevent="handleSubmit"
     >
         <textarea
+            ref="inputRef"
             v-model="text"
             class="dialog-composer__input"
             rows="1"

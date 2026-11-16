@@ -103,6 +103,29 @@ def parse_model_json(text):
         return json.loads(text + "".join(reversed(stack)))
 
 
+def extract_json_object(text):
+    """Fallback for chat models that wrap JSON in reasoning or prose.
+
+    Used only after a strict parse failed. Drops <think> blocks and returns the
+    first complete top-level JSON object found in the text. Nothing is inferred:
+    if no object parses on its own, the original error is raised.
+    """
+    text = re.sub(r"<think>.*?</think>", "", text, flags=re.DOTALL | re.IGNORECASE)
+    text = re.sub(r"\x60\x60\x60(?:json)?", "", text)
+    decoder = json.JSONDecoder()
+    position = text.find("{")
+    while position != -1:
+        try:
+            value, _ = decoder.raw_decode(text, position)
+        except json.JSONDecodeError:
+            position = text.find("{", position + 1)
+            continue
+        if isinstance(value, dict):
+            return value
+        position = text.find("{", position + 1)
+    raise ValueError("JSON object not found in model output")
+
+
 class Gateway:
     def __init__(self):
         self.base = (env("LLM_BASE_URL") or env("OPENAI_BASE_URL")).rstrip("/")
@@ -189,6 +212,10 @@ class Gateway:
         text = re.sub(r"^\x60\x60\x60(?:json)?\s*|\s*\x60\x60\x60$", "", text)
         try:
             return parse_model_json(text)
+        except (ValueError, TypeError):
+            pass
+        try:
+            return extract_json_object(text)
         except (ValueError, TypeError) as exc:
             finish = result["choices"][0].get("finish_reason", "unknown")
             raise ModelError(f"Модель вернула некорректный JSON (finish_reason={finish}, chars={len(text)})") from exc
